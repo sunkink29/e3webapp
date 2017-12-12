@@ -1,0 +1,80 @@
+<script>
+  app.controller('teacherMainViewController', function($scope, $rootScope, objService, $timeout, $mdDialog, $mdToast) {
+    var controller = this;
+    $rootScope.mainView = controller;
+    controller.NextStudents = [[{id:-1,name:'loading'},{id:-1,name:''}]];
+    controller.currentStudents = [[{id:-1,name:'loading'},{id:-1,name:''}]];
+    
+    controller.updateStudents = function (currentWeek) {
+      if (currentWeek) {
+        controller.currentStudents = [[{id:-1,name:'loading'},{id:-1,name:''}]];
+      } else {
+        controller.NextStudents = [[{id:-1,name:'loading'},{id:-1,name:''}]];
+      }
+      controller.currentWeek = currentWeek;
+      google.script.run.withSuccessHandler(controller.showStudents).getStudents(undefined, undefined, currentWeek);
+    }
+    
+    controller.showStudents = function(students) {
+      students.forEach(function callback(column, outerIndex) {
+        column.forEach(function callback(student, innerIndex) {
+          if (student != null) { students[outerIndex][innerIndex] = objService.getStudentObjFromList(student); }
+        });
+      });
+      if (controller.currentWeek) {
+        controller.currentStudents = students;
+      } else {
+        controller.NextStudents = students;
+        controller.updateStudents(true);
+      }
+      $scope.$apply();
+    }
+    
+    controller.showAssignDialog = function(ev,block) {
+      controller.setBlock(block);
+      $mdDialog.show({
+        contentElement: '#assign',
+        parent: angular.element(document.body),
+        targetEvent: ev,
+        clickOutsideToClose: true,
+        onRemoving: function() {
+          $rootScope.assign.onClose();
+        }
+      });
+    }
+    
+    controller.showEditDialog = function(ev,block) {
+      controller.setBlock(block);
+      $mdDialog.show({
+        contentElement: '#edit',
+        parent: angular.element(document.body),
+        targetEvent: ev,
+        clickOutsideToClose: true,
+        onRemoving: function() {
+          $rootScope.edit.onClose();
+        }
+      });
+    }
+    
+    controller.setBlock = function (block) {
+      $rootScope.block = block;      
+    }
+    
+    controller.removeStudent = function(index, block){
+      var studentId = controller.NextStudents[block][index].id;
+      google.script.run.withSuccessHandler(controller.handleError).removeStudentFromClass(studentId, block);
+      var list = controller.NextStudents;
+      list[block].splice(index, 1);
+    };
+    
+    controller.handleError = function(message) {
+      if (message.succeed == false) {
+        console.log(message.error);
+        $mdToast.showSimple(message.error);
+        controller.updateStudents();
+      }
+    }
+    
+    controller.updateStudents();
+  });
+</script>

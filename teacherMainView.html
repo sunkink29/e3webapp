@@ -1,0 +1,47 @@
+<div ng-controller="teacherMainViewController as controller" layout-padding>
+  <md-content>
+    <h1 flex>View Students</h1>
+    <md-tabs md-dynamic-height md-border-bottom>
+      <md-tab label="next">
+        <div layout="row" layout-padding>
+          <div class="cell-shading" flex>Tue/Wed</div>
+          <div class="cell-shading" flex></div>
+          <div class="cell-shading" flex>Thu/Fri</div>
+          <div class="cell-shading" flex></div>
+        </div>
+        <div layout="row">
+          <div layout='column' ng-repeat="column in controller.NextStudents" ng-init="outerIndex = $index;" flex>
+            <div flex="50" style="max-height:50px" ng-class="$odd?'cell-shading':''" layout="row" ng-repeat="row in column">
+              <div style="transform: translateY(25%)" layout-padding flex>{{ (row.name!='')?row.name+' | grade:'+row.grade:row.name }}</div>
+              <md-button style="height:30px" ng-show="(row.id != -1)" ng-click="controller.removeStudent($index, outerIndex)">Remove Student</md-button>
+            </div>
+          </div>
+        </div>
+        <div layout="row">
+          <div layout='column' ng-repeat="column in controller.NextStudents" ng-init="outerIndex = $index" flex>
+            <div flex="50" layout="row">
+              <md-button flex="50" class="" ng-click="controller.showAssignDialog($event,outerIndex)">Add Student</md-button>
+              <md-button flex="50" class="" ng-click="controller.showEditDialog($event,outerIndex)">Edit Class</md-button>
+            </div>
+          </div>
+        </div>
+      </md-tab>
+      <md-tab label="current">
+        <div layout="row" layout-padding>
+          <div class="cell-shading" flex>Tue/Wed</div>
+          <div class="cell-shading" flex></div>
+          <div class="cell-shading" flex>Thu/Fri</div>
+          <div class="cell-shading" flex></div>
+        </div>
+        <div layout="row">
+          <div layout='column' ng-repeat="column in controller.currentStudents" ng-init="outerIndex = $index;" flex>
+            <div flex="50" style="max-height:50px" ng-class="$odd?'cell-shading':''" layout="row" ng-repeat="row in column">
+              <div style="transform: translateY(25%)" layout-padding flex>{{ (row.name!='')?row.name+' | grade:'+row.grade:row.name }}</div>
+            </div>
+          </div>
+        </div>
+      </md-tab>
+    </md-tabs>
+    <md-button class="btn waves-effect waves-light" ng-click="controller.updateStudents()" flex>refresh</md-button>
+  </md-content>
+</div>

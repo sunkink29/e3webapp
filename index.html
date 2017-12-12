@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html  ng-app="SelectionApp">
+  <head>
+    <base target="_top">
+    <?!= include('stylesheet'); ?>
+    <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/angular_material/1.1.0/angular-material.min.css">
+  </head>
+  <body>
+    <div id="main">
+      <!-- tab start -->
+      <? if (data.admin == true && data.teacher == true) { ?>
+        <md-tabs md-dynamic-height md-border-bottom>
+      <? } ?>
+      
+      <!-- teacher main -->
+      <? if (data.teacher == true) { ?>
+        
+        <!--teacher tab start-->
+        <? if (data.admin == true) { ?>
+          <md-tab label="Teacher View">
+        <? } ?>
+        
+        <?!= include('teacherMainView');?>
+        
+        <!-- teacher tab end -->
+        <? if (data.admin == true) { ?>
+          </md-tab>
+        <? } ?>
+      <? } ?>
+      
+      <!-- admin main -->
+      <? if (data.admin == true) { ?>
+      
+        <!--admin tab start-->
+        <? if (data.teacher == true) { ?>
+          <md-tab label="Admin View">
+        <? } ?>
+        
+        <?!= include('adminMainView');?>
+          
+        <!-- admin tab end -->
+        <? if (data.teacher == true) { ?>
+          </md-tab>
+        <? } ?>
+      <? } ?>
+      
+      <!-- tab end -->
+      <? if (data.admin == true && data.teacher == true) { ?>
+        </md-tabs>
+      <? } ?>
+      
+      <!-- student main -->
+      <? if (data.admin == false && data.teacher == false) { ?>
+        <?!= include('studentMainView'); ?>
+      <? } ?>
+    </div>
+    
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+    <!-- Angular Material requires Angular.js Libraries -->
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.5/angular.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.5/angular-animate.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.5/angular-aria.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.5/angular-messages.min.js"></script>
+
+    <!-- Angular Material Library -->
+    <script src="https://ajax.googleapis.com/ajax/libs/angular_material/1.1.0/angular-material.min.js"></script>
+    <script>
+      var curPage = 'main';
+      function showPage(page) {
+        $("#"+curPage).hide();
+        $("#"+page).show();
+        curPage = page;
+      }
+      function clearCache() {
+        google.script.run.clearCache();
+      }
+    </script>
+    <?!= include('app'); ?>
+    <?!= include('objService'); ?>
+    <? if (data.admin == true) { ?>
+      <?!= include('adminMainViewController'); ?>
+    <? } if (data.teacher == true) { ?>
+      <?!= include('teacherMainViewController'); ?>
+      <?!= include('assignStudent'); ?>
+      <?!= include('assignStudentController'); ?>
+      <?!= include('editClass'); ?>
+      <?!= include('editClassController'); ?>
+    <? } if (data.admin == false && data.teacher == false) { ?>
+      <?!= include('studentMainViewController'); ?>
+      <?!= include('changeClass'); ?>
+      <?!= include('changeClassController'); ?>
+    <? } ?>
+    <p></p>
+    <md-button onclick="clearCache()">clear cache</md-button>
+  </body>
+</html>
