@@ -1,5 +1,17 @@
 <script>
-  app.controller('adminMainViewController', function($scope, $rootScope, objService, $timeout, $mdDialog) {
+  app.controller('adminMainViewController', function($scope, $rootScope, objService, $mdDialog) {
     var controller = this;
+    
+    controller.showAddDialog = function(ev) {
+      $mdDialog.show({
+        contentElement: '#addUser',
+        parent: angular.element(document.body),
+        targetEvent: ev,
+        clickOutsideToClose: true,
+        onRemoving: function() {
+          $rootScope.addUser.resetUser();
+        }
+      });
+    }
   })
 </script>

@@ -79,6 +79,8 @@
     <?!= include('objService'); ?>
     <? if (data.admin == true) { ?>
       <?!= include('adminMainViewController'); ?>
+      <?!= include('addUser'); ?>
+      <?!= include('addUserController'); ?>
     <? } if (data.teacher == true) { ?>
       <?!= include('teacherMainViewController'); ?>
       <?!= include('assignStudent'); ?>

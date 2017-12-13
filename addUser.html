@@ -1,0 +1,37 @@
+<div style="visibility: hidden">
+  <div id='addUser' class='md-dialog-container' ng-controller="addUserController as controller">
+    <md-dialog layout-padding>
+      <form name="newUserForm" ng-submit="newUserForm.$valid && controller.addUser(controller.newUser)" novalidate>
+        <md-dialog-content>
+          <h3>Add User</h3>
+          <md-input-container>
+            <label>Name</label>
+            <input ng-model='controller.newUser.name' type="text" required>
+          </md-input-container>
+          <md-input-container>
+            <label>Email</label>
+            <input ng-model='controller.newUser.email' type="text" required>
+          </md-input-container>
+          <md-input-container class="selectTransform">
+            <label>IsTeacher</label>
+            <md-select ng-model='controller.newUser.isTeacher' required>
+              <md-option value='false'>false</md-option>
+              <md-option value='true'>true</md-option>
+            </md-select>
+          </md-input-container>
+          <md-input-container class="selectTransform">
+            <label>IsAdmin</label>
+            <md-select ng-model='controller.newUser.isAdmin' required>
+              <md-option value='false'>false</md-option>
+              <md-option value='true'>true</md-option>
+            </md-select>
+          </md-input-container>
+        </md-dialog-content>
+        <md-dialog-actions>
+          <md-button ng-click="controller.closeDialog()">Back</md-button>
+          <md-button type="submit">Add Account</md-button>
+        </md-dialog-actions>
+      </form>
+    </md-dialog>
+  </div>
+</div>

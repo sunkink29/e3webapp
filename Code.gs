@@ -63,12 +63,10 @@ function getTeacherList() {
    }
 }
 
-function getAdminList() {
-  if (adminList == null) {
-    openSpreadSheet();
-    var sheet = ss.getSheetByName("admin data");
-    adminList = sheet.getRange('A2:'+ addLetter('A', sheet.getLastColumn()) + sheet.getLastRow()).getValues();
-  }
+function getUserList() {
+  openSpreadSheet();
+  var sheet = ss.getSheetByName("permission data");
+  return sheet.getRange('A2:'+ addLetter('A', sheet.getLastColumn()) + sheet.getLastRow()).getValues();
 }
 
 function getPermissions() {
@@ -83,9 +81,9 @@ function getPermissions() {
     var permissionList = sheet.getRange('A2:'+ addLetter('A', sheet.getLastColumn()) + sheet.getLastRow()).getValues();
     var currentUser = Session.getActiveUser();
     permissionList.forEach(function(item, index) {
-      if (item[0] == currentUser) {
-        permissions.isTeacher = item[2];
-        permissions.isAdmin = item[3];
+      if (item[1] == currentUser) {
+        permissions.isTeacher = item[3];
+        permissions.isAdmin = item[4];
       }
     });
     cache.put('isTeacher', permissions.isTeacher);
@@ -290,6 +288,29 @@ function editBlockInfo(blockInfo, currentWeek) {
     message.error = "invalid permissions";
   }
   return message;
+}
+
+function addUser(user) {
+  openSpreadSheet();
+  var sheet = ss.getSheetByName("Permission data");
+  var newRow = sheet.getRange(sheet.getLastRow()+1, 1, 1, 5);
+  newRow.getCell(1, 1).setValue(sheet.getLastRow());
+  newRow.getCell(1, 2).setValue(user.email);
+  newRow.getCell(1, 3).setValue(user.name);
+  newRow.getCell(1, 4).setValue(user.isTeacher.toLowerCase() == 'true');
+  newRow.getCell(1, 5).setValue(user.isAdmin.toLowerCase() == 'true');
+  
+  function setupSheet(sheetName, user) {
+    var sheet = ss.getSheetByName(sheetName);
+    var newRow = sheet.getRange(sheet.getLastRow()+1, 1, 1, 3);
+    newRow.getCell(1, 1).setValue(sheet.getLastRow()-1);
+    newRow.getCell(1, 2).setValue(user.email);
+    newRow.getCell(1, 3).setValue(user.name);
+  }
+  if (!(user.isTeacher==="false" && user.isAdmin==='true')) { 
+    setupSheet((user.isTeacher==="true"?"teacher": "student")+" data current",user); 
+    setupSheet((user.isTeacher==="true"?"teacher": "student")+" data new",user);
+  }
 }
 
 function include(filename) {
