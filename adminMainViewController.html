@@ -13,5 +13,17 @@
         }
       });
     }
+    
+    controller.showEditDialog = function(ev) {
+      $mdDialog.show({
+        contentElement: '#editUser',
+        parent: angular.element(document.body),
+        targetEvent: ev,
+        clickOutsideToClose: true,
+        onRemoving: function() {
+          $rootScope.editUser.resetUser();
+        }
+      });
+    }
   })
 </script>

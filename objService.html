@@ -1,5 +1,5 @@
 <script>
-  app.service('objService', function () {
+app.service('objService', function () {
   this.getTeacherObjFromList = function(teacherList) {
     var teacherObj = {name:"Unassigned", id: -1, blocks: [{status: 'open'}, {status: 'open'}]};
     if (teacherList != null) {
@@ -34,6 +34,17 @@
       status: blockInfoList[5]
     }
     return blockInfoObj;
+  }
+  this.getUserObjFromList = function(userList) {
+    var userObj = {
+      id: userList[0],
+      userRow: userList[5],
+      email: userList[1],
+      name: userList[2],
+      isTeacher: userList[3],
+      isAdmin: userList[4]
+    }
+    return userObj;
   }
 });
 </script>
