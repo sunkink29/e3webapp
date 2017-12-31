@@ -1,4 +1,4 @@
-var regularSheetId = '13iBDpDkQFiJPQ1EEqM_5QEweC6kbznjiHxqDHz0kUPI';
+var regularSheetId = '1Q53QVvSGb4wb7KbV1eJRCusPaAmeGU3a2LTvtCDeh2k';
 var debugSheetId = '1OPCahVswUJuDtNjX-KrCpQxjaTMca8vUgcuPpHvUJx8';
 var currentWeek = false;
 var ss;
@@ -130,14 +130,20 @@ function setCurUserRow() {
   }
 }
 
-function getStudents(showAll, grade, currentWeek) {
-  if (isTeacher()) {
+function getStudents(showAll, grade, currentWeek, teacherIndex) {
+  if (isTeacher() || isAdmin()) {
     this.currentWeek = currentWeek
     var block1List = [];
     var block2List = [];
     getStudentList();
     getTeacherList();
     setCurUserRow();
+    var curUserRow = this.curUserRow;
+    
+    if (teacherIndex != undefined && isAdmin()) {
+      curUserRow = teacherIndex + 2;
+    }
+    
     studentList.forEach(function(item, index) {
       if (!(grade == undefined) == (item[3] == grade)) {
         if (showAll == true) {block1List.push(item);}
@@ -161,9 +167,6 @@ function getStudents(showAll, grade, currentWeek) {
 
 function getTeachers(current, currentWeek) {
   this.currentWeek = currentWeek;
-  if (ss == null) {
-      ss = SpreadsheetApp.openById(sheetId);
-  }
   var output = [];
   getTeacherList();
   if (current == true) {
