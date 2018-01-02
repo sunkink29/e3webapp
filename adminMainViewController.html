@@ -26,6 +26,18 @@
       });
     }
     
+    controller.showRemoveDialog = function(ev) {
+      $mdDialog.show({
+        contentElement: '#removeUser',
+        parent: angular.element(document.body),
+        targetEvent: ev,
+        clickOutsideToClose: true,
+        onRemoving: function() {
+          $rootScope.removeUser.resetUser();
+        }
+      });
+    }
+    
     controller.showScheduleDialog = function(ev) {
       $mdDialog.show({
         contentElement: '#viewSchedule',

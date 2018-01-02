@@ -298,8 +298,7 @@ function addUser(user) {
     openSpreadSheet();
     var sheet = ss.getSheetByName("Permission data");
     var newRow = sheet.getRange(sheet.getLastRow()+1, 1, 1, 6);
-    var userRow = "";
-    newRow.getCell(1, 1).setFormula("row()-2");
+    newRow.getCell(1, 1).setFormula("row()-1");
     newRow.getCell(1, 2).setValue(user.email);
     newRow.getCell(1, 3).setValue(user.name);
     newRow.getCell(1, 4).setValue(user.isTeacher.toLowerCase() == 'true');
@@ -311,13 +310,12 @@ function addUser(user) {
       newRow.getCell(1, 1).setFormula("row()-2");
       newRow.getCell(1, 2).setValue(user.email);
       newRow.getCell(1, 3).setValue(user.name);
-      userRow = sheet.getLastRow()-2;
     }
     if (!(user.isTeacher==="false" && user.isAdmin==='true')) { 
       setupSheet((user.isTeacher==="true"?"teacher": "student")+" data current",user); 
       setupSheet((user.isTeacher==="true"?"teacher": "student")+" data new",user);
     }
-    newRow.getCell(1, 6).setValue(userRow);
+    newRow.getCell(1, 6).setFormula("QUERY('teacher data new'!A$2:$C, CONCATENATE(\"select A where C matches '\",C"+(newRow.getCell(1, 1).getValue()+1)+",\"'\"))");
   }
 }
 
@@ -334,7 +332,6 @@ function editUser(user) {
       newRow.getCell(1, 1).setValue(sheet.getLastRow()-1);
       newRow.getCell(1, 2).setValue(user.email);
       newRow.getCell(1, 3).setValue(user.name);
-      curRow = sheet.getLastRow() - 2;
     }
     
     function removeFromSheet(sheetName) {
@@ -342,22 +339,39 @@ function editUser(user) {
       sheet.deleteRow(curRow+2);
     }
     
-    // enable when can use query to automaticly fix row numbers
-    /*
     if (userRow.getCell(1, 4).getValue() != user.isTeacher) {
-      if ((!userRow.getCell(1, 4).getValue() && !userRow.getCell(1, 5).getValue()) ||  userRow.getCell(1, 4).getValue()) {
-        removeFromSheet((user.isTeacher === false ?"teacher": "student")+" data current");
-        removeFromSheet((user.isTeacher === false ?"teacher": "student")+" data new");
+      if (!(!userRow.getCell(1, 4).getValue() && userRow.getCell(1, 5).getValue())) {
+        removeFromSheet((user.isTeacher != true ?"teacher": "student")+" data current");
+        removeFromSheet((user.isTeacher != true ?"teacher": "student")+" data new");
       }
       addToSheet((user.isTeacher=== true ?"teacher": "student")+" data current",user); 
       addToSheet((user.isTeacher=== true ?"teacher": "student")+" data new",user);
-      userRow.getCell(1, 6).setValue(curRow);
+      userRow.getCell(1, 6).setFormula("QUERY('"+(user.isTeacher=== true ?"teacher": "student")+" data new'!A$2:$C, CONCATENATE(\"select A where C matches '\",C"+(user.id+1)+",\"'\"))");
     }
-    */
     userRow.getCell(1, 4).setValue(user.isTeacher === true);
     userRow.getCell(1, 5).setValue(user.isAdmin === true);
   }
   
+}
+
+function removeUser(user) {
+  if (isAdmin()){
+    openSpreadSheet();
+    var sheet = ss.getSheetByName("Permission data");
+    var userRow = sheet.getRange(user.id+1, 1, 1, 6)
+    var curRow = user.userRow;
+    sheet.deleteRow(user.id+1);
+    
+    function removeFromSheet(sheetName) {
+      var ssheet = ss.getSheetByName(sheetName);
+      ssheet.deleteRow(curRow+2);
+    }
+    
+    if (!(!user.isTeacher == true && user.isAdmin == true)) {
+      removeFromSheet((user.isTeacher == true ?"teacher": "student")+" data current");
+      removeFromSheet((user.isTeacher == true ?"teacher": "student")+" data new");
+    }
+  }
 }
 
 function include(filename) {
