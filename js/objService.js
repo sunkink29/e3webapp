@@ -1,4 +1,3 @@
-<script>
 app.service('objService', function () {
   this.getTeacherObjFromList = function(teacherList) {
     var teacherObj = {name:"Unassigned", id: -1, blocks: [{status: 'open'}, {status: 'open'}]};
@@ -47,4 +46,3 @@ app.service('objService', function () {
     return userObj;
   }
 });
-</script>
