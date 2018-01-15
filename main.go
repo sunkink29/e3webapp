@@ -1,10 +1,11 @@
 package main
 
 import (
-	"bytes"
+	"fmt"
 	"html/template"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"sync"
 
 	"google.golang.org/appengine"
@@ -17,9 +18,8 @@ var indexTemplate = template.Must(template.New("index").Funcs(funcMap).ParseFile
 var mux sync.Mutex
 
 type options struct {
-	admin   bool
-	teacher bool
-	url     string
+	Admin, Teacher bool
+	URL            *url.URL
 }
 
 func main() {
@@ -35,32 +35,36 @@ func doGet(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", "text/html; charset=utf-8")
 	// ctx := appengine.NewContext(r)
 	// u := user.Current(ctx)
-	err := indexTemplate.Execute(w, nil)
+	r.ParseForm()
+	opt := options{Admin: r.Form.Get("admin") == "true", Teacher: r.Form.Get("teacher") == "true", URL: r.URL}
+	err := indexTemplate.ExecuteTemplate(w, "index.html", opt)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
 
-func include(filename string) string {
+func include(filename string) (string, error) {
 	mux.Lock()
 	file, err := ioutil.ReadFile(filename)
 	mux.Unlock()
 	if err != nil {
-		return err.Error()
+		return "", err
 	}
-	n := bytes.IndexByte(file, 0)
-	s := string(file[:n])
-	return s
+	s := fmt.Sprintf("%s", file)
+	return s, nil
 }
 
-func includeHTML(filename string) template.HTML {
-	return template.HTML(include(filename))
+func includeHTML(filename string) (template.HTML, error) {
+	text, err := include(filename)
+	return template.HTML(text), err
 }
 
-func includeJS(filename string) template.JS {
-	return template.JS(include(filename))
+func includeJS(filename string) (template.JS, error) {
+	text, err := include(filename)
+	return template.JS(text), err
 }
 
-func includeCSS(filename string) template.CSS {
-	return template.CSS(include(filename))
+func includeCSS(filename string) (template.CSS, error) {
+	text, err := include(filename)
+	return template.CSS(text), err
 }

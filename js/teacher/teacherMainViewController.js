@@ -11,7 +11,7 @@ app.controller('teacherMainViewController', function($scope, $rootScope, objServ
       controller.NextStudents = [[{id:-1,name:'loading'},{id:-1,name:''}]];
     }
     controller.currentWeek = currentWeek;
-    google.script.run.withSuccessHandler(controller.showStudents).getStudents(undefined, undefined, currentWeek);
+    // google.script.run.withSuccessHandler(controller.showStudents).getStudents(undefined, undefined, currentWeek);
   }
   
   controller.showStudents = function(students) {
@@ -61,7 +61,7 @@ app.controller('teacherMainViewController', function($scope, $rootScope, objServ
   
   controller.removeStudent = function(index, block){
     var studentId = controller.NextStudents[block][index].id;
-    google.script.run.withSuccessHandler(controller.handleError).removeStudentFromClass(studentId, block);
+    // google.script.run.withSuccessHandler(controller.handleError).removeStudentFromClass(studentId, block);
     var list = controller.NextStudents;
     list[block].splice(index, 1);
   };

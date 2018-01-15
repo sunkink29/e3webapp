@@ -20,7 +20,7 @@ app.controller('editUserController', function($scope, $rootScope, objService, $m
   
   controller.updateUsers = function() {
     controller.selectedStudent = null;
-    google.script.run.withSuccessHandler(controller.showUsers).getUserList();
+    //google.script.run.withSuccessHandler(controller.showUsers).getUserList();
   }
   
   controller.showUsers = function(users) {
@@ -35,7 +35,7 @@ app.controller('editUserController', function($scope, $rootScope, objService, $m
   }
   
   controller.editUser = function(user) {
-    google.script.run.editUser(user);
+    //google.script.run.editUser(user);
     controller.closeDialog();
   }
   

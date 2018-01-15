@@ -7,7 +7,7 @@ app.controller('editClassController', function($scope, $rootScope, objService, $
   
   controller.updateBlockInfo = function() {
     var block = $rootScope.block;
-    google.script.run.withSuccessHandler(controller.showBlockInfo).getBlockInfo();
+    // google.script.run.withSuccessHandler(controller.showBlockInfo).getBlockInfo();
   }
   
   controller.showBlockInfo = function(message) {
@@ -19,7 +19,7 @@ app.controller('editClassController', function($scope, $rootScope, objService, $
   }
   
   controller.submitEdit = function() {
-    google.script.run.editBlockInfo(controller.currentBlockInfo[$rootScope.block]);
+    // google.script.run.editBlockInfo(controller.currentBlockInfo[$rootScope.block]);
     controller.closeDialog();
   }
   

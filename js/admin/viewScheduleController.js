@@ -16,7 +16,7 @@ app.controller('viewScheduleController', function($scope, $rootScope, objService
       controller.nextClasses = [{name:'Loading'}];
     }
     controller.currentWeek = currentWeek;
-    google.script.run.withSuccessHandler(controller.showTeachers).getTeachers(false, currentWeek);
+    //google.script.run.withSuccessHandler(controller.showTeachers).getTeachers(false, currentWeek);
   }
   
   controller.showTeachers = function(teachers) {
@@ -37,7 +37,7 @@ app.controller('viewScheduleController', function($scope, $rootScope, objService
   
   controller.updateStudents = function(teacher, currentWeek) {
     controller.studentList = [[{name:"Loading"}]]
-    google.script.run.withSuccessHandler(controller.showStudents).getStudents(false, undefined, currentWeek, teacher.id);
+    // google.script.run.withSuccessHandler(controller.showStudents).getStudents(false, undefined, currentWeek, teacher.id);
   }
   
   controller.showStudents = function(students) {

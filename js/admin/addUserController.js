@@ -6,7 +6,7 @@ app.controller('addUserController', function($scope, $rootScope, objService, $md
   controller.rootScope.addUser = this;
   
   controller.addUser = function(user) {
-    google.script.run.addUser(user);
+    //google.script.run.addUser(user);
     controller.closeDialog();
   }
   

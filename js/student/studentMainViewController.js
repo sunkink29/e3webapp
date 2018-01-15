@@ -15,7 +15,7 @@ app.controller('mainViewController', function($scope, $rootScope,objService, $ti
       controller.nextClasses = [{name:'Loading'}];
     }
     controller.currentWeek = currentWeek;
-    google.script.run.withSuccessHandler(controller.updateTeachers).getTeachers(true,currentWeek);
+    // google.script.run.withSuccessHandler(controller.updateTeachers).getTeachers(true,currentWeek);
   }
   
   controller.updateTeachers = function (teachers) {

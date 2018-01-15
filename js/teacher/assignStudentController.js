@@ -23,7 +23,7 @@ app.controller('assignStudentController', function($scope, $rootScope, objServic
   controller.updateStudents = function() {
     controller.selectDisabled = true;
     controller.selectedStudent = null;
-    google.script.run.withSuccessHandler(controller.showStudents).getStudents(true, controller.grade);
+    // google.script.run.withSuccessHandler(controller.showStudents).getStudents(true, controller.grade);
   }
   
   controller.showStudents = function(students) {
@@ -45,7 +45,7 @@ app.controller('assignStudentController', function($scope, $rootScope, objServic
     var selectedStudent = controller.selectedStudent;
     var studentId = parseInt(selectedStudent.id);
     var block = $rootScope.block;
-    google.script.run.withSuccessHandler($rootScope.mainView.handleError).addStudentToClass(studentId, block);
+    // google.script.run.withSuccessHandler($rootScope.mainView.handleError).addStudentToClass(studentId, block);
     var studentTable = $rootScope.mainView.NextStudents;
     studentTable[block][studentTable[block].length] = selectedStudent;
     controller.closeDialog();

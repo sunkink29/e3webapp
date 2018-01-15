@@ -7,7 +7,7 @@ app.controller('changeClassController', function($scope, $rootScope,objService, 
   
   controller.requestTeachers = function () {
     controller.classes = [{name:'Loading'}];
-    google.script.run.withSuccessHandler(controller.updateTeachers).getTeachers();
+    // google.script.run.withSuccessHandler(controller.updateTeachers).getTeachers();
   }
   
   controller.updateTeachers = function (teachers) {
@@ -27,7 +27,7 @@ app.controller('changeClassController', function($scope, $rootScope,objService, 
     }
     teacher.blocks[teacher.curBlock].curSize++;
     $rootScope.mainView.nextClasses[teacher.curBlock] = teacher;
-    google.script.run.withSuccessHandler(controller.handleError).setClass(teacher.curBlock, teacher.id);
+    // google.script.run.withSuccessHandler(controller.handleError).setClass(teacher.curBlock, teacher.id);
     $rootScope.error = '';
     controller.closeDialog()
   }

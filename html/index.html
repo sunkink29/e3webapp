@@ -2,56 +2,56 @@
 <html  ng-app="SelectionApp">
   <head>
     <base target="_top">
-    <link rel="stylesheet" href="{{.url}}/css/stylesheet.css">
+    <link rel="stylesheet" href="{{.URL.Host}}/css/stylesheet.css">
     <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/angular_material/1.1.0/angular-material.min.css">
   </head>
   <body>
     <div id="main">
       <!-- tab start -->
-      {{ if .admin and .teacher }}
+      {{ if and .Admin .Teacher }}
         <md-tabs md-dynamic-height md-border-bottom>
       {{ end }}
       
       <!-- teacher main -->
-      {{ if .teacher}}
+      {{ if .Teacher}}
         
         <!--teacher tab start-->
-        {{ if .admin}}
+        {{ if .Admin}}
           <md-tab label="Teacher View">
         {{ end }}
         
-        {{ call includeHTML "teacher/teacherMainView.html" }}
+        {{ includeHTML "html/teacher/teacherMainView.html" }}
         
         <!-- teacher tab end -->
-        {{ if .admin }}
+        {{ if .Admin }}
           </md-tab>
         {{ end }}
       {{ end }}
       
       <!-- admin main -->
-      {{ if .admin }}
+      {{ if .Admin }}
       
         <!--admin tab start-->
-        {{ .teacher }}
+        {{ if .Teacher }}
           <md-tab label="Admin View">
         {{ end }}
         
-        {{ call includeHTML "admin/adminMainView.html" }}
+        {{ includeHTML "html/admin/adminMainView.html" }}
           
         <!-- admin tab end -->
-        {{ if .teacher }}
+        {{ if .Teacher }}
           </md-tab>
         {{ end }}
       {{ end }}
       
       <!-- tab end -->
-      {{ if .admin and .teacher }}
+      {{ if and .Admin .Teacher }}
         </md-tabs>
       {{ end }}
       
       <!-- student main -->
-      {{ if .admin and .teacher }}
-        {{ call includeHTML "student/studentMainView.html" }}
+      {{ if and (not .Admin) (not .Teacher) }}
+        {{ includeHTML "html/student/studentMainView.html" }}
       {{ end }}
     </div>
     
@@ -77,31 +77,29 @@
 
       var app = angular.module('SelectionApp', ['ngMaterial']);
     </script>
-    <script src="{{.url}}/js/objService.js"></script>
-    {{ if .admin }
-      {{ call includeHTML "admin/addUser.html" }}
-      {{ call includeHTML "admin/editUser.html" }}
-      {{ call includeHTML "admin/removeUser.html" }}
-      {{ call includeHTML "admin/viewSchedule.html" }}
-      <script src="{{.url}}/js/admin/adminMainViewController.js"></script>
-      <script src="{{.url}}/js/admin/addUserController.js"></script>
-      <script src="{{.url}}/js/admin/editUserController.js"></script>
-      <script src="{{.url}}/js/admin/removeUserController.js"></script>
-      <script src="{{.url}}/js/admin/viewScheduleController.js"></script>
+    <script src="{{.URL.Host}}/js/objService.js"></script>
+    {{ if .Admin }}
+      {{ includeHTML "html/admin/addUser.html" }}
+      {{ includeHTML "html/admin/editUser.html" }}
+      {{ includeHTML "html/admin/removeUser.html" }}
+      {{ includeHTML "html/admin/viewSchedule.html" }}
+      <script src="{{.URL.Host}}/js/admin/adminMainViewController.js"></script>
+      <script src="{{.URL.Host}}/js/admin/addUserController.js"></script>
+      <script src="{{.URL.Host}}/js/admin/editUserController.js"></script>
+      <script src="{{.URL.Host}}/js/admin/removeUserController.js"></script>
+      <script src="{{.URL.Host}}/js/admin/viewScheduleController.js"></script>
     {{ end }}
-    {{ if .teacher }}
-      {{ call includeHTML "teacher/assignStudent.html" }}
-      {{ call includeHTML "teacher/editClass.html" }}
-      <script src="{{.url}}/js/teacher/teacherMainViewController.js"></script>
-      <script src="{{.url}}/js/teacher/assignStudentController.js"></script>
-      <script src="{{.url}}/js/teacher/editClassController.js"></script>
+    {{ if .Teacher }}
+      {{ includeHTML "html/teacher/assignStudent.html" }}
+      {{ includeHTML "html/teacher/editClass.html" }}
+      <script src="{{.URL.Host}}/js/teacher/teacherMainViewController.js"></script>
+      <script src="{{.URL.Host}}/js/teacher/assignStudentController.js"></script>
+      <script src="{{.URL.Host}}/js/teacher/editClassController.js"></script>
     {{ end }}
-    {{ if not .admin and not .teacher }}
-      {{ call includeHTML "student/changeClass.html" }}
-      <script>
-        {{ call includeJS "student/studentMainViewController.js" }}
-        {{ call includeJS "student/changeClassController.js" }}
-      </script>
+    {{ if and (not .Admin) (not .Teacher) }}
+      {{ includeHTML "html/student/changeClass.html" }}
+      <script src="{{.URL.Host}}/js/student/studentMainViewController.js"></script>
+      <script src="{{.URL.Host}}/js/student/changeClassController.js"></script>
     {{ end }}
     <p></p>
     <md-button onclick="clearCache()">clear cache</md-button>
