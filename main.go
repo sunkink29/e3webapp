@@ -5,7 +5,6 @@ import (
 	"html/template"
 	"io/ioutil"
 	"net/http"
-	"net/url"
 	"sync"
 
 	"google.golang.org/appengine"
@@ -19,7 +18,6 @@ var mux sync.Mutex
 
 type options struct {
 	Admin, Teacher bool
-	URL            *url.URL
 }
 
 func main() {
@@ -36,7 +34,7 @@ func doGet(w http.ResponseWriter, r *http.Request) {
 	// ctx := appengine.NewContext(r)
 	// u := user.Current(ctx)
 	r.ParseForm()
-	opt := options{Admin: r.Form.Get("admin") == "true", Teacher: r.Form.Get("teacher") == "true", URL: r.URL}
+	opt := options{Admin: r.Form.Get("admin") == "true", Teacher: r.Form.Get("teacher") == "true"}
 	err := indexTemplate.ExecuteTemplate(w, "index.html", opt)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)

@@ -2,7 +2,7 @@
 <html  ng-app="SelectionApp">
   <head>
     <base target="_top">
-    <link rel="stylesheet" href="{{.URL.Host}}/css/stylesheet.css">
+    <link rel="stylesheet" href="/css/stylesheet.css">
     <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/angular_material/1.1.0/angular-material.min.css">
   </head>
   <body>
@@ -77,29 +77,29 @@
 
       var app = angular.module('SelectionApp', ['ngMaterial']);
     </script>
-    <script src="{{.URL.Host}}/js/objService.js"></script>
+    <script src="/js/objService.js"></script>
     {{ if .Admin }}
       {{ includeHTML "html/admin/addUser.html" }}
       {{ includeHTML "html/admin/editUser.html" }}
       {{ includeHTML "html/admin/removeUser.html" }}
       {{ includeHTML "html/admin/viewSchedule.html" }}
-      <script src="{{.URL.Host}}/js/admin/adminMainViewController.js"></script>
-      <script src="{{.URL.Host}}/js/admin/addUserController.js"></script>
-      <script src="{{.URL.Host}}/js/admin/editUserController.js"></script>
-      <script src="{{.URL.Host}}/js/admin/removeUserController.js"></script>
-      <script src="{{.URL.Host}}/js/admin/viewScheduleController.js"></script>
+      <script src="/js/admin/adminMainViewController.js"></script>
+      <script src="/js/admin/addUserController.js"></script>
+      <script src="/js/admin/editUserController.js"></script>
+      <script src="/js/admin/removeUserController.js"></script>
+      <script src="/js/admin/viewScheduleController.js"></script>
     {{ end }}
     {{ if .Teacher }}
       {{ includeHTML "html/teacher/assignStudent.html" }}
       {{ includeHTML "html/teacher/editClass.html" }}
-      <script src="{{.URL.Host}}/js/teacher/teacherMainViewController.js"></script>
-      <script src="{{.URL.Host}}/js/teacher/assignStudentController.js"></script>
-      <script src="{{.URL.Host}}/js/teacher/editClassController.js"></script>
+      <script src="/js/teacher/teacherMainViewController.js"></script>
+      <script src="/js/teacher/assignStudentController.js"></script>
+      <script src="/js/teacher/editClassController.js"></script>
     {{ end }}
     {{ if and (not .Admin) (not .Teacher) }}
       {{ includeHTML "html/student/changeClass.html" }}
-      <script src="{{.URL.Host}}/js/student/studentMainViewController.js"></script>
-      <script src="{{.URL.Host}}/js/student/changeClassController.js"></script>
+      <script src="/js/student/studentMainViewController.js"></script>
+      <script src="/js/student/changeClassController.js"></script>
     {{ end }}
     <p></p>
     <md-button onclick="clearCache()">clear cache</md-button>
