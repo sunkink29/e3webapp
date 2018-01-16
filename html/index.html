@@ -6,49 +6,30 @@
     <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/angular_material/1.1.0/angular-material.min.css">
   </head>
   <body>
+    <p>loged in as {{.Email}}</p>
     <div id="main">
       <!-- tab start -->
       {{ if and .Admin .Teacher }}
         <md-tabs md-dynamic-height md-border-bottom>
-      {{ end }}
-      
-      <!-- teacher main -->
-      {{ if .Teacher}}
-        
-        <!--teacher tab start-->
-        {{ if .Admin}}
           <md-tab label="Teacher View">
-        {{ end }}
-        
-        {{ includeHTML "html/teacher/teacherMainView.html" }}
-        
-        <!-- teacher tab end -->
-        {{ if .Admin }}
+            {{ includeHTML "html/teacher/teacherMainView.html" }}
           </md-tab>
-        {{ end }}
+          <md-tab label="Admin View">
+            {{ includeHTML "html/admin/adminMainView.html" }}
+          </md-tab>
+        </md-tabs>
+      {{ end }}
+
+       <!-- teacher main -->
+      {{ if and .Teacher (not .Admin)}}
+      {{ includeHTML "html/teacher/teacherMainView.html" }}
       {{ end }}
       
       <!-- admin main -->
-      {{ if .Admin }}
-      
-        <!--admin tab start-->
-        {{ if .Teacher }}
-          <md-tab label="Admin View">
-        {{ end }}
-        
-        {{ includeHTML "html/admin/adminMainView.html" }}
-          
-        <!-- admin tab end -->
-        {{ if .Teacher }}
-          </md-tab>
-        {{ end }}
+      {{ if and .Admin (not .Teacher)}}
+      {{ includeHTML "html/admin/adminMainView.html" }}
       {{ end }}
-      
-      <!-- tab end -->
-      {{ if and .Admin .Teacher }}
-        </md-tabs>
-      {{ end }}
-      
+
       <!-- student main -->
       {{ if and (not .Admin) (not .Teacher) }}
         {{ includeHTML "html/student/studentMainView.html" }}
@@ -79,27 +60,20 @@
     </script>
     <script src="/js/objService.js"></script>
     {{ if .Admin }}
+      <script src="/js/admin/adminMainViewController.js"></script>
       {{ includeHTML "html/admin/addUser.html" }}
       {{ includeHTML "html/admin/editUser.html" }}
       {{ includeHTML "html/admin/removeUser.html" }}
       {{ includeHTML "html/admin/viewSchedule.html" }}
-      <script src="/js/admin/adminMainViewController.js"></script>
-      <script src="/js/admin/addUserController.js"></script>
-      <script src="/js/admin/editUserController.js"></script>
-      <script src="/js/admin/removeUserController.js"></script>
-      <script src="/js/admin/viewScheduleController.js"></script>
     {{ end }}
     {{ if .Teacher }}
+      <script src="/js/teacher/teacherMainViewController.js"></script>
       {{ includeHTML "html/teacher/assignStudent.html" }}
       {{ includeHTML "html/teacher/editClass.html" }}
-      <script src="/js/teacher/teacherMainViewController.js"></script>
-      <script src="/js/teacher/assignStudentController.js"></script>
-      <script src="/js/teacher/editClassController.js"></script>
     {{ end }}
     {{ if and (not .Admin) (not .Teacher) }}
-      {{ includeHTML "html/student/changeClass.html" }}
       <script src="/js/student/studentMainViewController.js"></script>
-      <script src="/js/student/changeClassController.js"></script>
+      {{ includeHTML "html/student/changeClass.html" }}
     {{ end }}
     <p></p>
     <md-button onclick="clearCache()">clear cache</md-button>

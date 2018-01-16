@@ -1,11 +1,15 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"html/template"
 	"io/ioutil"
 	"net/http"
+	"strings"
 	"sync"
+
+	"github.com/sunkink29/e3SelectionWebApp/user"
 
 	"google.golang.org/appengine"
 )
@@ -14,10 +18,18 @@ var funcMap = map[string]interface{}{
 	"includeHTML": includeHTML,
 	"include":     include}
 var indexTemplate = template.Must(template.New("index").Funcs(funcMap).ParseFiles("html/index.html"))
-var mux sync.Mutex
+var fileMux sync.Mutex
 
-type options struct {
-	Admin, Teacher bool
+var validMethods = map[string]func(dec *json.Decoder, w http.ResponseWriter, r *http.Request) error{
+	"print": func(dec *json.Decoder, w http.ResponseWriter, r *http.Request) error {
+		var str string
+		err := dec.Decode(&str)
+		if err != nil {
+			return err
+		}
+		fmt.Fprintln(w, str)
+		return nil
+	},
 }
 
 func main() {
@@ -25,26 +37,42 @@ func main() {
 }
 
 func init() {
-	http.HandleFunc("/", doGet)
+	http.HandleFunc("/", root)
+	http.HandleFunc("/async", async)
 }
 
-func doGet(w http.ResponseWriter, r *http.Request) {
-
+func root(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", "text/html; charset=utf-8")
-	// ctx := appengine.NewContext(r)
-	// u := user.Current(ctx)
+	ctx := appengine.NewContext(r)
 	r.ParseForm()
-	opt := options{Admin: r.Form.Get("admin") == "true", Teacher: r.Form.Get("teacher") == "true"}
-	err := indexTemplate.ExecuteTemplate(w, "index.html", opt)
+	u, _ := user.Get(ctx)
+	err := indexTemplate.ExecuteTemplate(w, "index.html", u)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
 
+func async(w http.ResponseWriter, r *http.Request) {
+	r.ParseForm()
+	methodStr := r.Form.Get("method")
+	method, ok := validMethods[methodStr]
+	if !ok {
+		http.Error(w, "method "+methodStr+" not found", http.StatusUnprocessableEntity)
+		return
+	}
+	strReader := strings.NewReader(r.Form.Get("data"))
+	dec := json.NewDecoder(strReader)
+	err := method(dec, w, r)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
+
 func include(filename string) (string, error) {
-	mux.Lock()
+	fileMux.Lock()
 	file, err := ioutil.ReadFile(filename)
-	mux.Unlock()
+	fileMux.Unlock()
 	if err != nil {
 		return "", err
 	}
@@ -55,14 +83,4 @@ func include(filename string) (string, error) {
 func includeHTML(filename string) (template.HTML, error) {
 	text, err := include(filename)
 	return template.HTML(text), err
-}
-
-func includeJS(filename string) (template.JS, error) {
-	text, err := include(filename)
-	return template.JS(text), err
-}
-
-func includeCSS(filename string) (template.CSS, error) {
-	text, err := include(filename)
-	return template.CSS(text), err
 }
