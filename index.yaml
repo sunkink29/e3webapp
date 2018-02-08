@@ -1,1 +1,9 @@
 indexes:
+
+- kind: User
+  ancestor: yes
+  properties:
+  - name: Email
+  - name: Name
+  - name: Teacher
+  - name: Admin

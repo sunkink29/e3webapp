@@ -3,7 +3,7 @@
   <head>
     <base target="_top">
     <link rel="stylesheet" href="/css/stylesheet.css">
-    <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/angular_material/1.1.0/angular-material.min.css">
+    <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/angular_material/1.1.6/angular-material.min.css">
   </head>
   <body>
     <p>loged in as {{.Email}}</p>
@@ -44,8 +44,9 @@
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.5/angular-messages.min.js"></script>
 
     <!-- Angular Material Library -->
-    <script src="https://ajax.googleapis.com/ajax/libs/angular_material/1.1.0/angular-material.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angular_material/1.1.6/angular-material.min.js"></script>
     <script>
+      /*eslint-disable no-unused-params, no-unused-vars*/
       var curPage = 'main';
       function showPage(page) {
         $("#"+curPage).hide();
@@ -54,6 +55,18 @@
       }
       function clearCache() {
         google.script.run.clearCache();
+      }
+      
+      function callMethod(method, data, callback) {
+      	var sData = JSON.stringify(data);
+      	$.ajax({
+		  type: "GET",
+		  url: "https://8080-dot-3367446-dot-devshell.appspot.com/async",
+		  data: {"method": method ,"data": sData }, // An object, not a string.
+		  contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
+		  dataType: "json",
+		  success: callback
+		});
       }
 
       var app = angular.module('SelectionApp', ['ngMaterial']);
@@ -77,5 +90,6 @@
     {{ end }}
     <p></p>
     <md-button onclick="clearCache()">clear cache</md-button>
+    <md-button onclick="callMethod('print', {test:'test', test2:'test2'})">test</md-button>
   </body>
 </html>

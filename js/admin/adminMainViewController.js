@@ -1,5 +1,18 @@
 app.controller('adminMainViewController', function($scope, $rootScope, objService, $mdDialog) {
   var controller = this;
+  $rootScope.adminControl = this;
+  
+  controller.userList;
+  
+  controller.updateUsers = function() {
+   	callMethod("getAllUsers", null, controller.showUsers);
+  };
+  
+  controller.showUsers = function(users) {
+    $scope.$apply(function() {
+      controller.userList = users;
+    });
+  };
   
   controller.showAddDialog = function(ev) {
     $mdDialog.show({
@@ -11,7 +24,7 @@ app.controller('adminMainViewController', function($scope, $rootScope, objServic
         $rootScope.addUser.resetUser();
       }
     });
-  }
+  };
   
   controller.showEditDialog = function(ev) {
     $mdDialog.show({
@@ -21,9 +34,12 @@ app.controller('adminMainViewController', function($scope, $rootScope, objServic
       clickOutsideToClose: true,
       onRemoving: function() {
         $rootScope.editUser.resetUser();
+      },
+      onShowing: function() {
+      	controller.updateUsers();
       }
     });
-  }
+  };
   
   controller.showRemoveDialog = function(ev) {
     $mdDialog.show({
@@ -33,9 +49,12 @@ app.controller('adminMainViewController', function($scope, $rootScope, objServic
       clickOutsideToClose: true,
       onRemoving: function() {
         $rootScope.removeUser.resetUser();
+      },
+      onShowing: function() {
+      	controller.updateUsers();
       }
     });
-  }
+  };
   
   controller.showScheduleDialog = function(ev) {
     $mdDialog.show({
@@ -47,5 +66,6 @@ app.controller('adminMainViewController', function($scope, $rootScope, objServic
         
       }
     });
-  }
-})
+  };
+  controller.updateUsers();
+});

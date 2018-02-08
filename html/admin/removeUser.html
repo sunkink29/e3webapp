@@ -8,12 +8,13 @@
           md-search-text-change=""
           md-search-text="controller.searchText"
           md-items="user in controller.querySearch(controller.searchText)"
-          md-item-text="user.name"
+          md-item-text="user.Name"
           md-min-length="0"
+          md-no-cache=true
           placeholder="User">
           <md-item-template>
             <span md-highlight-text="controller.searchText" md-highlight-flags="^i">
-              {{user.name}}
+              {{user.Name}}
             </span>
           </md-item-template>
           <md-not-found>No User Found</md-not-found>

@@ -12,19 +12,11 @@
             <label>Email</label>
             <input ng-model='controller.newUser.email' type="text" required>
           </md-input-container>
-          <md-input-container class="selectTransform">
-            <label>IsTeacher</label>
-            <md-select ng-model='controller.newUser.isTeacher' required>
-              <md-option value='false'>false</md-option>
-              <md-option value='true'>true</md-option>
-            </md-select>
+          <md-input-container class="md-block">
+          	<md-checkbox ng-model="controller.newUser.Teacher">Is Teacher</md-checkbox>
           </md-input-container>
-          <md-input-container class="selectTransform">
-            <label>IsAdmin</label>
-            <md-select ng-model='controller.newUser.isAdmin' required>
-              <md-option value='false'>false</md-option>
-              <md-option value='true'>true</md-option>
-            </md-select>
+          <md-input-container class="md-block">
+            <md-checkbox ng-model="controller.newUser.Admin">Is Admin</md-checkbox>
           </md-input-container>
         </md-dialog-content>
         <md-dialog-actions>

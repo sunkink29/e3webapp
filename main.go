@@ -14,29 +14,24 @@ import (
 	"google.golang.org/appengine"
 )
 
+type webMethod func(dec *json.Decoder, w http.ResponseWriter, r *http.Request) error
+
 var funcMap = map[string]interface{}{
 	"includeHTML": includeHTML,
 	"include":     include}
 var indexTemplate = template.Must(template.New("index").Funcs(funcMap).ParseFiles("html/index.html"))
 var fileMux sync.Mutex
 
-var validMethods = map[string]func(dec *json.Decoder, w http.ResponseWriter, r *http.Request) error{
-	"print": func(dec *json.Decoder, w http.ResponseWriter, r *http.Request) error {
-		var str string
-		err := dec.Decode(&str)
-		if err != nil {
-			return err
-		}
-		fmt.Fprintln(w, str)
-		return nil
-	},
-}
+var validMethods map[string]webMethod
 
 func main() {
 	appengine.Main()
 }
 
 func init() {
+	validMethods = make(map[string]webMethod)
+	addAdminMethods()
+
 	http.HandleFunc("/", root)
 	http.HandleFunc("/async", async)
 }
@@ -45,8 +40,13 @@ func root(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", "text/html; charset=utf-8")
 	ctx := appengine.NewContext(r)
 	r.ParseForm()
-	u, _ := user.Get(ctx)
-	err := indexTemplate.ExecuteTemplate(w, "index.html", u)
+	debug := r.Form.Get("debug") == "true"
+	u, err := user.GetCurrent(ctx, debug)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	err = indexTemplate.ExecuteTemplate(w, "index.html", u)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
@@ -67,6 +67,10 @@ func async(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+}
+
+func addToWebMethods(name string, method webMethod) {
+	validMethods[name] = method
 }
 
 func include(filename string) (string, error) {
