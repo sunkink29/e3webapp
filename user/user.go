@@ -22,7 +22,6 @@ func GetCurrent(ctx context.Context, debug bool) (*User, error) {
 	if err != nil {
 		return nil, err
 	}
-	//	user.Admin = true
 	return user, nil
 }
 
