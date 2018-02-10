@@ -1,0 +1,35 @@
+indexes:
+
+- kind: User
+  ancestor: yes
+  properties:
+  - name: Email
+  - name: Name
+  - name: Teacher
+  - name: Admin
+
+- kind: Teacher
+  ancestor: yes
+  properties:
+  - name: Email
+  - name: Name
+  - name: Subject1
+  - name: Description1
+  - name: RoomNumber1
+  - name: MaxSize1
+  - name: BlockOpen1
+  - name: Subject2
+  - name: Description2
+  - name: RoomNumber2
+  - name: MaxSize2
+  - name: BlockOpen2
+  - name: Current
+
+- kind: Student
+  ancestor: yes
+  properties:
+  - name: Email
+  - name: Name
+  - name: Teacher1
+  - name: Teacher2
+  - name: Current

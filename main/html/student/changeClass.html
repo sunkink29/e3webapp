@@ -1,0 +1,38 @@
+<div style="visibility: hidden">
+  <div id="change" class='md-dialog-container' ng-controller="changeClassController as controller">
+    <md-dialog class="dialog-table-size" layout-padding>
+      <md-dialog-content>
+        <h2>Change {{ (controller.rootScope.requestedChange.curBlock==0)?'Tue/Wed': 'Thr/Fri' }} </h2>
+        <div>
+          <div layout="row" layout-padding>
+            <div flex>Teacher</div>
+            <div flex>Room Number</div>
+            <div flex>Status</div>
+            <div flex>Subject</div>
+            <div flex>Description</div>
+            <div flex>Current / Max size</div>
+            <div flex></div>
+          </div>
+          <div layout="column" layout-padding>
+            <div layout='row' ng-repeat="class in controller.classes">
+              <div style="transform: translateY(25%)" flex>{{ class.Name }}</div>
+              <div style="transform: translateY(25%)" flex>{{ (controller.rootScope.requestedChange.curBlock == 0)?class.Block1.RoomNumber: class.Block2.RoomNumber }}</div>
+              <div style="transform: translateY(25%)" flex>{{ (controller.rootScope.requestedChange.curBlock == 0)?class.Block1.BlockOpen?'Open':'closed': class.Block2.BlockOpen?'Open':'closed'}}</div>
+              <div style="transform: translateY(25%)" flex>{{ (controller.rootScope.requestedChange.curBlock == 0)?class.Block1.Subject: class.Block2.Subject }}</div>
+              <div style="transform: translateY(25%)" flex>{{ (controller.rootScope.requestedChange.curBlock == 0)?class.Block1.Description: class.Block2.Description }}</div>
+              <div style="transform: translateY(25%)" flex>{{ ((controller.rootScope.requestedChange.curBlock == 0)?class.Block1.CurSize: class.Block2.CurSize)+' / '+((controller.rootScope.requestedChange.curBlock == 0)?class.Block1.MaxSize: class.Block2.MaxSize) }}</div>
+              <md-button ng-disabled="!(((controller.rootScope.requestedChange.curBlock == 0)?class.Block1.BlockOpen: class.Block2.BlockOpen)&& 
+                  ((controller.rootScope.requestedChange.curBlock == 0)?class.Block1.CurSize: class.Block2.CurSize) < ((controller.rootScope.requestedChange.curBlock == 0)?class.Block1.MaxSize: class.Block2.MaxSize))"
+                  ng-click="controller.selectClass(class)">Select Class</md-button>
+            </div>
+          </div>
+        </div>
+      </md-dialog-content>
+      <md-dialog-actions>
+        <md-button class="btn waves-effect waves-light" ng-click="controller.requestTeachers()">Refresh</md-button>
+        <md-button class="btn waves-effect waves-light" ng-click="controller.closeDialog()">Back</md-button>
+      </md-dialog-actions>
+    </md-dialog>
+  </div>
+</div>
+<script src="/js/student/changeClassController.js"></script>

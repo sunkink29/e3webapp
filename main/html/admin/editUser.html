@@ -1,0 +1,33 @@
+<div style="visibility: hidden">
+  <div id='editUser' class='md-dialog-container' ng-controller="editUserController as controller">
+    <md-dialog layout-padding>
+      <md-dialog-content>
+        <h3 layout-padding>Edit User Permissions</h3>
+        <md-autocomplete
+          md-selected-item="controller.selectedUser"
+          md-search-text-change=""
+          md-search-text="controller.searchText"
+          md-items="user in controller.querySearch(controller.searchText)"
+          md-item-text="user.Name"
+          md-min-length="0"
+          md-no-cache=true
+          placeholder="User">
+          <md-item-template>
+            <span md-highlight-text="controller.searchText" md-highlight-flags="^i">
+              {{user.Name}}
+            </span>
+          </md-item-template>
+          <md-not-found>No User Found</md-not-found>
+        </md-autocomplete>
+        <md-input-container class="md-block">
+          <md-checkbox ng-model="controller.selectedUser.Admin" required>Is Admin</md-checkbox>
+        </md-input-container>
+      </md-dialog-content>
+      <md-dialog-actions>
+        <md-button ng-click="controller.closeDialog()">Back</md-button>
+        <md-button ng-click="controller.editUser(controller.selectedUser)">Submit Edit</md-button>
+      </md-dialog-actions>
+    </md-dialog>
+  </div>
+</div>
+<script src="/js/admin/editUserController.js"></script>
