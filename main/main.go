@@ -10,6 +10,7 @@ import (
 	"sync"
 
 	"github.com/sunkink29/e3SelectionWebApp/user"
+	"github.com/sunkink29/e3SelectionWebApp/errors"
 
 	"google.golang.org/appengine"
 )
@@ -48,10 +49,11 @@ func root(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	u.Admin = false
-	u.Teacher = false
+//	u.Admin = false
+//	u.Teacher = false
 	err = indexTemplate.ExecuteTemplate(w, "index.html", u)
 	if err != nil {
+		err = errors.New(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
@@ -82,7 +84,7 @@ func include(filename string) (string, error) {
 	file, err := ioutil.ReadFile(filename)
 	fileMux.Unlock()
 	if err != nil {
-		return "", err
+		return "", errors.New(err.Error())
 	}
 	s := fmt.Sprintf("%s", file)
 	return s, nil

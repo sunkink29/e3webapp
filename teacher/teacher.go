@@ -5,12 +5,10 @@ import (
 	"google.golang.org/appengine/datastore"
 	
 	"github.com/sunkink29/e3SelectionWebApp/student"
+	"github.com/sunkink29/e3SelectionWebApp/errors"
 )
-type Error string
 
-func (e Error) Error() string { return string(e) }
-
-const TeacherNotFound = Error("Teacher not found")
+const TeacherNotFound = "Teacher not found"
 
 type Block struct {
 	Subject, Description string
@@ -109,15 +107,20 @@ func New(ctx context.Context, teacher *Teacher, debug bool) error {
 	pKey := parentKey(ctx, debug)
 	k := datastore.NewIncompleteKey(ctx, "Teacher", pKey)
 	_, err := datastore.Put(ctx, k, teacher)
-
-	return err
+	if err != nil {
+		return errors.New(err.Error())
+	}
+	return nil
 }
 
 func Get(ctx context.Context, k *datastore.Key) (*Teacher, error) {
 	var usr *Teacher
 	err := datastore.Get(ctx, k, usr)
 	usr.ID = k.Encode()
-	return usr, err
+	if err != nil {
+		return nil, errors.New(err.Error())
+	}
+	return usr, nil
 }
 
 func GetWithEmail(ctx context.Context, email string, current bool, debug bool) (*Teacher, error) {
@@ -127,10 +130,10 @@ func GetWithEmail(ctx context.Context, email string, current bool, debug bool) (
 	var user Teacher
 	key, err := t.Next(&user)
 	if err == datastore.Done {
-		return nil, TeacherNotFound
+		return nil, errors.New(TeacherNotFound)
 	}
 	if err != nil {
-		return nil, err
+		return nil, errors.New(err.Error())
 	}
 	user.ID = key.Encode()
 	
@@ -154,7 +157,7 @@ func GetAll(ctx context.Context, currentWeek bool, debug bool) ([]*Teacher, erro
 	var teachers []*Teacher
 	keys, err := q.GetAll(ctx, &teachers)
 	if err != nil {
-		return nil, err
+		return nil, errors.New(err.Error())
 	}
 	for i := 0; i < len(teachers); i++ {
 		teachers[i].ID = keys[i].Encode()
@@ -182,21 +185,31 @@ func GetStudentCount(ctx context.Context, email string, block int, current bool,
 		sBlock = "Teacher2"
 	}
 	q := datastore.NewQuery("Student").Ancestor(ancestor).Filter("Current =", current).Filter(sBlock+" =", email)
-	return q.Count(ctx)
+	count, err := q.Count(ctx)
+	if err != nil {
+		return 0, errors.New(err.Error())
+	}
+	return count, err
 }
 
 func Edit(ctx context.Context, teacher *Teacher) error {
 	key, err := datastore.DecodeKey(teacher.ID)
 	if err != nil {
-		return err
+		return errors.New(err.Error())
 	}
 	_, err = datastore.Put(ctx, key, teacher)
-	return err
+	if err != nil {
+		return errors.New(err.Error())
+	}
+	return nil
 }
 
 func Delete(ctx context.Context, k *datastore.Key) error {
 	err := datastore.Delete(ctx, k)
-	return err
+	if err != nil {
+		return errors.New(err.Error())
+	}
+	return nil
 }
 
 func parentKey(ctx context.Context, debug bool) *datastore.Key {

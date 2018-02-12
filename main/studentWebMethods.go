@@ -11,8 +11,7 @@ import (
 	"github.com/sunkink29/e3SelectionWebApp/student"
 	"github.com/sunkink29/e3SelectionWebApp/user"
 	"github.com/sunkink29/e3SelectionWebApp/teacher"
-
-	"errors"
+	"github.com/sunkink29/e3SelectionWebApp/errors"
 )
 
 func addStudentMethods() {
@@ -29,7 +28,7 @@ func setTeacher(dec *json.Decoder, w http.ResponseWriter, r *http.Request) error
 	debug := r.Form.Get("debug") == "true"
 	var variables struct { Teacher string; Block int}
 	if err := dec.Decode(&variables); err != nil {
-		return err
+		return errors.New(err.Error())
 	}
 	
 	usr, err := student.GetCurrent(ctx, false, debug)
@@ -42,10 +41,12 @@ func setTeacher(dec *json.Decoder, w http.ResponseWriter, r *http.Request) error
 	}
 	if variables.Block == 0 {
 		prevTeacher, err := teacher.GetWithEmail(ctx, usr.Teacher1, false, debug)
-		if err != nil {
+		prevOpen := true
+		if err != nil && err.(errors.Error).Message != teacher.TeacherNotFound {
 			return err
+		} else if err == nil {
+			prevOpen = prevTeacher.Block1.BlockOpen
 		}
-		prevOpen := prevTeacher.Block1.BlockOpen
 		newOpen := newTeacher.Block1.BlockOpen
 		newFull := newTeacher.Block1.CurSize >= newTeacher.Block1.MaxSize
 		
@@ -54,10 +55,12 @@ func setTeacher(dec *json.Decoder, w http.ResponseWriter, r *http.Request) error
 		}
 	} else {
 		prevTeacher, err := teacher.GetWithEmail(ctx, usr.Teacher2, false, debug)
-		if err != nil {
-		return err
-	}
-		prevOpen := prevTeacher.Block2.BlockOpen
+		prevOpen := true
+		if err != nil && err.(errors.Error).Message != teacher.TeacherNotFound {
+			return err
+		} else if err == nil {
+			prevOpen = prevTeacher.Block2.BlockOpen
+		}
 		newOpen := newTeacher.Block2.BlockOpen
 		newFull := newTeacher.Block2.CurSize >= newTeacher.Block2.MaxSize
 		
@@ -66,8 +69,8 @@ func setTeacher(dec *json.Decoder, w http.ResponseWriter, r *http.Request) error
 		}
 	}
 	
-	student.Edit(ctx, usr)
-	return nil
+	err = student.Edit(ctx, usr)
+	return err
 }
 
 func getCurrentStudentBlocks(dec *json.Decoder, w http.ResponseWriter, r *http.Request) error {
@@ -75,22 +78,25 @@ func getCurrentStudentBlocks(dec *json.Decoder, w http.ResponseWriter, r *http.R
 	debug := r.Form.Get("debug") == "true"
 	var current bool
 	if err := dec.Decode(&current); err != nil {
-		return err
+		return errors.New(err.Error())
 	}
 	
 	usr, err := student.GetCurrent(ctx, current, debug)
+	if err != nil {
+		return err
+	}
 	block1, err := teacher.GetWithEmail(ctx, usr.Teacher1, current, debug)
-	if err != nil && err != teacher.TeacherNotFound {
+	if err != nil && err.(errors.Error).Message != teacher.TeacherNotFound {
 		return err
 	}
 	block2, err := teacher.GetWithEmail(ctx, usr.Teacher2, current, debug)
-	if err != nil && err != teacher.TeacherNotFound {
+	if err != nil && err.(errors.Error).Message != teacher.TeacherNotFound {
 		return err
 	}
 	blocks := []*teacher.Teacher{block1, block2}
 	jBlocks, err := json.Marshal(blocks)
 	if err != nil {
-		return err
+		return errors.New(err.Error())
 	}
 	s := string(jBlocks[:])
 	fmt.Fprintln(w, s)
@@ -107,12 +113,12 @@ func newStudent(dec *json.Decoder, w http.ResponseWriter, r *http.Request) error
 	if curU.Admin {
 		newUsr := new(student.Student)
 		if err := dec.Decode(newUsr); err != nil {
-			return err
+			return errors.New(err.Error())
 		}
 		err := student.New(ctx, newUsr, debug)
 		return err
 	}
-	return errors.New("Access Denied")
+	return errors.New(errors.AccessDenied)
 }
 
 func editStudent(dec *json.Decoder, w http.ResponseWriter, r *http.Request) error {
@@ -125,12 +131,12 @@ func editStudent(dec *json.Decoder, w http.ResponseWriter, r *http.Request) erro
 	if curU.Admin {
 		usr := new(student.Student)
 		if err := dec.Decode(usr); err != nil {
-			return err
+			return errors.New(err.Error())
 		}
 		err := student.Edit(ctx, usr)
 		return err
 	}
-	return errors.New("Access Denied")
+	return errors.New(errors.AccessDenied)
 }
 
 func deleteStudent(dec *json.Decoder, w http.ResponseWriter, r *http.Request) error {
@@ -143,16 +149,16 @@ func deleteStudent(dec *json.Decoder, w http.ResponseWriter, r *http.Request) er
 	if curU.Admin {
 		sKey := new(string)
 		if err := dec.Decode(sKey); err != nil {
-			return err
+			return errors.New(err.Error())
 		}
 		k, err := datastore.DecodeKey(*sKey)
 		if err != nil {
-			return err
+			return errors.New(err.Error())
 		}
 		err = student.Delete(ctx, k)
 		return err
 	}
-	return errors.New("Access Denied")
+	return errors.New(errors.AccessDenied)
 }
 
 func getAllStudents(dec *json.Decoder, w http.ResponseWriter, r *http.Request) error {
@@ -160,7 +166,7 @@ func getAllStudents(dec *json.Decoder, w http.ResponseWriter, r *http.Request) e
 	debug := r.Form.Get("debug") == "true"
 	var current bool
 	if err := dec.Decode(&current); err != nil {
-			return err
+			return errors.New(err.Error())
 	}
 	students, err := student.GetAll(ctx, current, debug)
 	if err != nil {
@@ -169,7 +175,7 @@ func getAllStudents(dec *json.Decoder, w http.ResponseWriter, r *http.Request) e
 
 	jStudents, err := json.Marshal(students)
 	if err != nil {
-		return err
+		return errors.New(err.Error())
 	}
 	s := string(jStudents[:])
 
