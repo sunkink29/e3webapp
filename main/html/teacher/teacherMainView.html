@@ -12,8 +12,8 @@
         <div layout="row">
           <div layout='column' ng-repeat="column in controller.NextStudents" ng-init="outerIndex = $index;" flex>
             <div flex="50" style="max-height:50px" ng-class="$odd?'cell-shading':''" layout="row" ng-repeat="row in column">
-              <div style="transform: translateY(25%)" layout-padding flex>{{ (row.name!='')?row.name+' | grade:'+row.grade:row.name }}</div>
-              <md-button style="height:30px" ng-show="(row.id != -1)" ng-click="controller.removeStudent($index, outerIndex)">Remove Student</md-button>
+              <div style="transform: translateY(25%)" layout-padding flex>{{ (row.Name!='')?row.Name+' | grade:'+row.grade:row.Name }}</div>
+              <md-button style="height:30px" ng-show="(row.ID != -1)" ng-click="controller.removeStudent($index, outerIndex)">Remove Student</md-button>
             </div>
           </div>
         </div>
@@ -36,12 +36,12 @@
         <div layout="row">
           <div layout='column' ng-repeat="column in controller.currentStudents" ng-init="outerIndex = $index;" flex>
             <div flex="50" style="max-height:50px" ng-class="$odd?'cell-shading':''" layout="row" ng-repeat="row in column">
-              <div style="transform: translateY(25%)" layout-padding flex>{{ (row.name!='')?row.name+' | grade:'+row.grade:row.name }}</div>
+              <div style="transform: translateY(25%)" layout-padding flex>{{ (row.Name!='')?row.Name+' | grade:'+row.grade:row.Name }}</div>
             </div>
           </div>
         </div>
       </md-tab>
     </md-tabs>
-    <md-button class="btn waves-effect waves-light" ng-click="controller.updateStudents()" flex>refresh</md-button>
+    <md-button class="btn waves-effect waves-light" ng-click="controller.updateStudents(false)" flex>refresh</md-button>
   </md-content>
 </div>

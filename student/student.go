@@ -27,6 +27,19 @@ func New(ctx context.Context, student *Student, debug bool) error {
 	return err
 }
 
+func Get(ctx context.Context, k *datastore.Key) (*Student, error) {
+	var usr Student
+	err := datastore.Get(ctx, k, &usr)
+	if err != nil {
+		return nil, errors.New(err.Error())
+	}
+	usr.ID = k.Encode()
+	if err != nil {
+		return nil, errors.New(err.Error())
+	}
+	return &usr, nil
+}
+
 func GetCurrent(ctx context.Context, current bool, debug bool) (*Student, error) {
 	curU, err := user.GetCurrent(ctx, debug)
 	if err != nil {

@@ -172,8 +172,34 @@ func getAllStudents(dec *json.Decoder, w http.ResponseWriter, r *http.Request) e
 	if err != nil {
 		return err
 	}
+	
+	var bStudents = make([]struct{ID, Email, Name string; Block1, Block2 teacher.Block}, len(students))
+	for i,s := range students {
+		bStudents[i].ID = s.ID
+		bStudents[i].Email = s.Email
+		bStudents[i].Name = s.Name
+		teacher1, err := teacher.GetWithEmail(ctx, s.Teacher1, current, debug)
+		if err != nil && s.Teacher1 != "" {
+			return err
+		}
+		if s.Teacher1 != "" {
+			bStudents[i].Block1 = teacher1.Block1
+		} else {
+			bStudents[i].Block1.BlockOpen = true
+		}
 
-	jStudents, err := json.Marshal(students)
+		teacher2, err := teacher.GetWithEmail(ctx, s.Teacher2, current, debug)
+		if err != nil && s.Teacher2 != "" {
+			return err
+		}
+		if s.Teacher2 != "" {
+			bStudents[i].Block2 = teacher2.Block2
+		} else {
+			bStudents[i].Block1.BlockOpen = true
+		}
+	}
+
+	jStudents, err := json.Marshal(bStudents)
 	if err != nil {
 		return errors.New(err.Error())
 	}

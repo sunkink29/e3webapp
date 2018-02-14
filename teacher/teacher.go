@@ -4,6 +4,7 @@ import (
 	"golang.org/x/net/context"
 	"google.golang.org/appengine/datastore"
 	
+	"github.com/sunkink29/e3SelectionWebApp/user"
 	"github.com/sunkink29/e3SelectionWebApp/student"
 	"github.com/sunkink29/e3SelectionWebApp/errors"
 )
@@ -123,6 +124,18 @@ func Get(ctx context.Context, k *datastore.Key) (*Teacher, error) {
 	return usr, nil
 }
 
+func GetCurrent(ctx context.Context, current bool, debug bool) (*Teacher, error) {
+	curU, err := user.GetCurrent(ctx, debug)
+	if err != nil {
+		return nil, err
+	}
+	usr, err := GetWithEmail(ctx, curU.Email, current, debug)
+	if err != nil {
+		return nil, err
+	}
+	return usr, nil
+}
+
 func GetWithEmail(ctx context.Context, email string, current bool, debug bool) (*Teacher, error) {
 	ancestor := parentKey(ctx, debug)
 	q := datastore.NewQuery("Teacher").Ancestor(ancestor).Filter("Email =", email).Filter("Current =", current)
@@ -190,6 +203,33 @@ func GetStudentCount(ctx context.Context, email string, block int, current bool,
 		return 0, errors.New(err.Error())
 	}
 	return count, err
+}
+
+func GetStudentList(ctx context.Context, block int, current bool, debug bool) ([]*student.Student, error) {
+	ancestor := student.ParentKey(ctx, debug)
+	var sBlock string
+	if block == 0 {
+		sBlock = "Teacher1"
+	} else {
+		sBlock = "Teacher2"
+	}
+	usr, err := GetCurrent(ctx, current, debug)
+	if err != nil {
+		return make([]*student.Student, 0), err
+	}
+	q := datastore.NewQuery("Student").Ancestor(ancestor).Filter("Current =", current).Filter(sBlock+" =", usr.Email)
+	var students = make([]*student.Student, 0);
+	keys, err := q.GetAll(ctx, &students)
+	if err == datastore.Done {
+		return make([]*student.Student, 0), errors.New(student.StudentNotFound)
+	}
+	if err != nil {
+		return make([]*student.Student, 0), errors.New(err.Error())
+	}
+	for i := 0; i < len(students); i++ {
+		students[i].ID = keys[i].Encode()
+	}
+	return students, nil
 }
 
 func Edit(ctx context.Context, teacher *Teacher) error {

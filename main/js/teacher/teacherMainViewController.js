@@ -1,8 +1,8 @@
 app.controller('teacherMainViewController', function($scope, $rootScope, objService, $timeout, $mdDialog, $mdToast) {
   var controller = this;
   $rootScope.mainView = controller;
-  controller.NextStudents = [[{id:-1,name:'loading'},{id:-1,name:''}]];
-  controller.currentStudents = [[{id:-1,name:'loading'},{id:-1,name:''}]];
+  controller.NextStudents = [[{ID:-1,name:'loading'},{ID:-1,name:''}]];
+  controller.currentStudents = [[{ID:-1,name:'loading'},{ID:-1,name:''}]];
   
   controller.updateStudents = function (currentWeek) {
     if (currentWeek) {
@@ -11,15 +11,10 @@ app.controller('teacherMainViewController', function($scope, $rootScope, objServ
       controller.NextStudents = [[{id:-1,name:'loading'},{id:-1,name:''}]];
     }
     controller.currentWeek = currentWeek;
-    // google.script.run.withSuccessHandler(controller.showStudents).getStudents(undefined, undefined, currentWeek);
-  }
+    callMethod("getCurrentStudents", currentWeek, controller.showStudents);
+  };
   
   controller.showStudents = function(students) {
-    students.forEach(function callback(column, outerIndex) {
-      column.forEach(function callback(student, innerIndex) {
-        if (student != null) { students[outerIndex][innerIndex] = objService.getStudentObjFromList(student); }
-      });
-    });
     if (controller.currentWeek) {
       controller.currentStudents = students;
     } else {
@@ -27,7 +22,7 @@ app.controller('teacherMainViewController', function($scope, $rootScope, objServ
       controller.updateStudents(true);
     }
     $scope.$apply();
-  }
+  };
   
   controller.showAssignDialog = function(ev,block) {
     controller.setBlock(block);
@@ -40,7 +35,7 @@ app.controller('teacherMainViewController', function($scope, $rootScope, objServ
         $rootScope.assign.onClose();
       }
     });
-  }
+  };
   
   controller.showEditDialog = function(ev,block) {
     controller.setBlock(block);
@@ -53,26 +48,18 @@ app.controller('teacherMainViewController', function($scope, $rootScope, objServ
         $rootScope.edit.onClose();
       }
     });
-  }
+  };
   
   controller.setBlock = function (block) {
     $rootScope.block = block;      
-  }
+  };
   
   controller.removeStudent = function(index, block){
-    var studentId = controller.NextStudents[block][index].id;
-    // google.script.run.withSuccessHandler(controller.handleError).removeStudentFromClass(studentId, block);
+    var studentId = controller.NextStudents[block][index].ID;
+    callMethod("removeFromClass", {Key: studentId, Block: block}, controller.showStudents);
     var list = controller.NextStudents;
     list[block].splice(index, 1);
   };
   
-  controller.handleError = function(message) {
-    if (message.succeed == false) {
-      console.log(message.error);
-      $mdToast.showSimple(message.error);
-      controller.updateStudents();
-    }
-  }
-  
-  controller.updateStudents();
+  controller.updateStudents(false);
 });

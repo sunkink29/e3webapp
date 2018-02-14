@@ -3,7 +3,7 @@
     <md-dialog layout-padding>
       <md-dialog-content>
         <h3 layout-padding>Assign Student</h3>
-        <md-input-container flex>
+        <!--<md-input-container flex>
           <label>grade</label>
           <md-select id='grade' ng-model="controller.grade" ng-change="controller.changeGrade()">
             <md-option value="" disabled selected>Select Grade</md-option>
@@ -12,7 +12,7 @@
             <md-option value="11">11th</md-option>
             <md-option value="12">12th</md-option>
           </md-select>
-        </md-input-container>
+        </md-input-container>-->
         <md-autocomplete
           md-no-cache="true"
           ng-disabled="controller.selectDisabled"
@@ -21,12 +21,12 @@
           md-search-text="controller.searchText"
           md-selected-item-change="controller.changeStudent()"
           md-items="student in controller.querySearch(controller.searchText)"
-          md-item-text="student.name"
+          md-item-text="student.Name"
           md-min-length="0"
           placeholder="Student">
           <md-item-template>
             <span md-highlight-text="controller.searchText" md-highlight-flags="^i"
-               >{{student.name}} | Current class: {{ student.blocks[controller.rootScope.block].blocks[controller.rootScope.block].status }}</span>
+               >{{student.Name}} | Current class: {{ (controller.rootScope.block == 0)?(student.Block1.BlockOpen? 'Open':'closed'): (student.Block2.BlockOpen? 'Open':'closed')}}</span>
           </md-item-template>
           <md-not-found>No Student Found</md-not-found>
         </md-autocomplete>

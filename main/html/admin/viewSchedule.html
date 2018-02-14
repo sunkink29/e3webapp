@@ -18,9 +18,9 @@
                  <div layout='row' ng-repeat="class in controller.nextTeacherList" flex>
                    <div style="transform: translateY(25%)" flex>{{ class.Name }}</div>
                    <div style="transform: translateY(25%)" flex>{{ class.Block1.Description }}</div>
-                   <div style="transform: translateY(25%)" flex>{{ class.Block1.CurSize+' / ' + class.block1.MaxSize }}</div>
+                   <div style="transform: translateY(25%)" flex>{{ class.Block1.CurSize+' / ' + class.Block1.MaxSize }}</div>
                    <div style="transform: translateY(25%)" flex>{{ class.Block2.Description }}</div>
-                   <div style="transform: translateY(25%)" flex>{{ class.Block2.CurSize+' / ' + class.block2.MaxSize }}</div>
+                   <div style="transform: translateY(25%)" flex>{{ class.Block2.CurSize+' / ' + class.Block2.MaxSize }}</div>
                    <md-button ng-click="controller.showTeacherStudentList(class, false)" >View Student List</md-button>
                  </div>
                </div>
@@ -38,9 +38,9 @@
                  <div layout='row' ng-repeat="class in controller.currentTeacherList" flex>
                    <div style="transform: translateY(25%)" flex>{{ class.Name }}</div>
                    <div style="transform: translateY(25%)" flex>{{ class.Block1.Description }}</div>
-                   <div style="transform: translateY(25%)" flex>{{ class.Block1.CurSize+' / ' + class.block1.MaxSize }}</div>
+                   <div style="transform: translateY(25%)" flex>{{ class.Block1.CurSize+' / ' + class.Block1.MaxSize }}</div>
                    <div style="transform: translateY(25%)" flex>{{ class.Block2.Description }}</div>
-                   <div style="transform: translateY(25%)" flex>{{ class.Block2.CurSize+' / ' + class.block2.MaxSize }}</div>
+                   <div style="transform: translateY(25%)" flex>{{ class.Block2.CurSize+' / ' + class.Block2.MaxSize }}</div>
                    <md-button ng-click="controller.showTeacherStudentList(class, true)" >View Student List</md-button>
                  </div>
                </div>
