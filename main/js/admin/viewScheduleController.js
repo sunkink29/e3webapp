@@ -30,18 +30,13 @@ app.controller('viewScheduleController', function($scope, $rootScope, objService
     });
   };
   
-  controller.updateStudents = function(teacher, currentWeek) {
+  controller.updateStudents = function(teacher) {
     controller.studentList = [[{name:"Loading"}]];
-    // google.script.run.withSuccessHandler(controller.showStudents).getStudents(false, undefined, currentWeek, teacher.id);
+    callMethod("getStudentsInClass", teacher.ID, controller.showStudents);
   };
   
   controller.showStudents = function(students) {
     $scope.$apply(function() {
-      students.forEach(function callback(column, outerIndex) {
-        column.forEach(function callback(student, innerIndex) {
-          if (student != null) { students[outerIndex][innerIndex] = objService.getStudentObjFromList(student); }
-        });
-      });
       controller.studentList = students;
     });
   };

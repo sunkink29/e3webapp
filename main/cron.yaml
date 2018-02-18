@@ -1,0 +1,5 @@
+cron:
+- description: "Weekly student teacher switch"
+  url: /usrswitch
+  schedule: every sun 24:00
+  timezone: America/Chicago

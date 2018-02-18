@@ -1,26 +1,76 @@
 package errors
 
 import (
-	"runtime"
-	"fmt"
+//	"fmt"
+//	"os"
+//	"encoding/json"
+	"runtime/debug"
+	"net/http"
+
+	"golang.org/x/net/context"
+//	"cloud.google.com/go/errorreporting"
+//	"google.golang.org/api/option"
+//	"google.golang.org/appengine/datastore"
+	"google.golang.org/appengine/user"
 )
 
 const AccessDenied = "Access Denied"
 
 type Error struct {
 	Message string
-	Pc []uintptr
+	Stack   []byte
+}
+
+type ErrorLog struct {
+	ServiceContent struct {
+		Service string `json:"service"`
+	} `json:"serviceContent"`
+	Message string `json:"message"`
+	Content struct {
+		HttpRequest struct {
+			Method             string `json:"method"`
+			Url                string `json:"url"`
+			ResponseStatusCode int    `json:"responseStatusCode"`
+		} `json:"httpRequest"`
+		User string `json:"user"`
+	} `json:"Content"`
 }
 
 func (this Error) Error() string {
-	output := this.Message + "\n"
-	frames := runtime.CallersFrames(this.Pc)
-	frame, more := frames.Next()
-	for more {
-		output = fmt.Sprint(output, "\n"," ", frame.Function,"\n\t ", frame.File,":", frame.Line)
-		if (more) {
-			frame, more = frames.Next()
-		}
+	return this.Message
+}
+
+func (this Error) HttpError(ctx context.Context, usr string, url string, r *http.Request) string {
+	output := this.Message
+	logging := string(this.Stack[:])
+//	errLog := new(ErrorLog)
+//	errLog.ServiceContent.Service = "frontend"
+//	errLog.Message = fmt.Sprintf("%v\n%v", output, logging)
+//	errLog.Content.HttpRequest.Method = "Get"
+//	errLog.Content.HttpRequest.Url = url
+//	errLog.Content.HttpRequest.ResponseStatusCode = 500
+//	errLog.Content.User = usr
+//	jLog, _ := json.Marshal(errLog)
+//	sLog := string(jLog[:])
+//	fmt.Fprint(os.Stderr, sLog)
+
+//	key := datastore.NewKey(ctx, "Auth", "Auth", 0, nil)
+//	var Auth struct {ID string; APIKey string}
+//	datastore.Get(ctx, key, &Auth)
+//	ctf := errorreporting.Config{}
+//	client, _ := errorreporting.NewClient(ctx, Auth.ID, ctf, option.WithAPIKey(Auth.APIKey))
+//	entry := errorreporting.Entry{this, r, this.Stack}
+//	err = client.ReportSync(ctx,entry)
+//	defer client.Close()
+//	defer client.Flush()
+
+	if user.IsAdmin(ctx) {
+		output += "\n"+logging
+//		if err != nil {
+//			output += "\n" + err.Error()
+//		}
+//		output = sLog
+
 	}
 	return output
 }
@@ -28,7 +78,6 @@ func (this Error) Error() string {
 func New(input string) error {
 	var output Error
 	output.Message = input
-	output.Pc = make([]uintptr, 20)
-	runtime.Callers(2, output.Pc)
+	output.Stack = debug.Stack()
 	return output
 }

@@ -15,3 +15,7 @@ handlers:
   script: _go_app
   login: required
   auth_fail_action: redirect
+  
+- url: /usrswitch
+  script: _go_app
+  login: admin

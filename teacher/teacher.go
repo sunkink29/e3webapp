@@ -3,10 +3,10 @@ package teacher
 import (
 	"golang.org/x/net/context"
 	"google.golang.org/appengine/datastore"
-	
-	"github.com/sunkink29/e3SelectionWebApp/user"
-	"github.com/sunkink29/e3SelectionWebApp/student"
+	appUser "google.golang.org/appengine/user"
+
 	"github.com/sunkink29/e3SelectionWebApp/errors"
+	"github.com/sunkink29/e3SelectionWebApp/student"
 )
 
 const TeacherNotFound = "Teacher not found"
@@ -22,11 +22,11 @@ type Teacher struct {
 	ID             string `datastore:"-"`
 	Email, Name    string
 	Block1, Block2 Block
-	Current bool
+	Current        bool
 }
 
 func (t *Teacher) Load(ps []datastore.Property) error {
-	for _,p := range ps {
+	for _, p := range ps {
 		switch p.Name {
 		case "Email":
 			t.Email = p.Value.(string)
@@ -104,92 +104,33 @@ func (t *Teacher) Save() ([]datastore.Property, error) {
 	}, nil
 }
 
-func New(ctx context.Context, teacher *Teacher, debug bool) error {
+// New stores the given teacher as a new teacher
+func (tchr *Teacher) New(ctx context.Context, debug bool) error {
 	pKey := parentKey(ctx, debug)
 	k := datastore.NewIncompleteKey(ctx, "Teacher", pKey)
-	_, err := datastore.Put(ctx, k, teacher)
+	k, err := datastore.Put(ctx, k, tchr)
+	if err != nil {
+		return errors.New(err.Error())
+	}
+	tchr.ID = k.Encode()
+	return nil
+}
+
+// Edit changes the teacher with the given ID to the values given
+func (tchr *Teacher) Edit(ctx context.Context) error {
+	key, err := datastore.DecodeKey(tchr.ID)
+	if err != nil {
+		return errors.New(err.Error())
+	}
+	_, err = datastore.Put(ctx, key, tchr)
 	if err != nil {
 		return errors.New(err.Error())
 	}
 	return nil
 }
 
-func Get(ctx context.Context, k *datastore.Key) (*Teacher, error) {
-	var usr *Teacher
-	err := datastore.Get(ctx, k, usr)
-	usr.ID = k.Encode()
-	if err != nil {
-		return nil, errors.New(err.Error())
-	}
-	return usr, nil
-}
-
-func GetCurrent(ctx context.Context, current bool, debug bool) (*Teacher, error) {
-	curU, err := user.GetCurrent(ctx, debug)
-	if err != nil {
-		return nil, err
-	}
-	usr, err := GetWithEmail(ctx, curU.Email, current, debug)
-	if err != nil {
-		return nil, err
-	}
-	return usr, nil
-}
-
-func GetWithEmail(ctx context.Context, email string, current bool, debug bool) (*Teacher, error) {
-	ancestor := parentKey(ctx, debug)
-	q := datastore.NewQuery("Teacher").Ancestor(ancestor).Filter("Email =", email).Filter("Current =", current)
-	t := q.Run(ctx)
-	var user Teacher
-	key, err := t.Next(&user)
-	if err == datastore.Done {
-		return nil, errors.New(TeacherNotFound)
-	}
-	if err != nil {
-		return nil, errors.New(err.Error())
-	}
-	user.ID = key.Encode()
-	
-	count, err := GetStudentCount(ctx, user.Email, 0, current, debug)
-	if err != nil {
-		return nil, err
-	}
-	user.Block1.CurSize = count
-	
-	count, err = GetStudentCount(ctx, user.Email, 1, current, debug)	
-	if err != nil {
-		return nil, err
-	}
-	user.Block2.CurSize = count
-	return &user, nil
-}
-
-func GetAll(ctx context.Context, currentWeek bool, debug bool) ([]*Teacher, error) {
-	ancestor := parentKey(ctx, debug)
-	q := datastore.NewQuery("Teacher").Ancestor(ancestor).Filter("Current =", currentWeek)
-	var teachers []*Teacher
-	keys, err := q.GetAll(ctx, &teachers)
-	if err != nil {
-		return nil, errors.New(err.Error())
-	}
-	for i := 0; i < len(teachers); i++ {
-		teachers[i].ID = keys[i].Encode()
-		count, err := GetStudentCount(ctx, teachers[i].Email, 0, currentWeek, debug)
-		if err != nil {
-			return nil, err
-		}
-		teachers[i].Block1.CurSize = count
-		
-		count, err = GetStudentCount(ctx, teachers[i].Email, 1, currentWeek, debug)	
-		if err != nil {
-			return nil, err
-		}
-		teachers[i].Block2.CurSize = count
-	}
-	return teachers, nil
-}
-
-func GetStudentCount(ctx context.Context, email string, block int, current bool, debug bool) (int, error) {
+// StudentCount returns the student count for the given block
+func (tchr *Teacher) StudentCount(ctx context.Context, block int, debug bool) (int, error) {
 	ancestor := student.ParentKey(ctx, debug)
 	var sBlock string
 	if block == 0 {
@@ -197,7 +138,7 @@ func GetStudentCount(ctx context.Context, email string, block int, current bool,
 	} else {
 		sBlock = "Teacher2"
 	}
-	q := datastore.NewQuery("Student").Ancestor(ancestor).Filter("Current =", current).Filter(sBlock+" =", email)
+	q := datastore.NewQuery("Student").Ancestor(ancestor).Filter("Current =", tchr.Current).Filter(sBlock+" =", tchr.Email)
 	count, err := q.Count(ctx)
 	if err != nil {
 		return 0, errors.New(err.Error())
@@ -205,7 +146,8 @@ func GetStudentCount(ctx context.Context, email string, block int, current bool,
 	return count, err
 }
 
-func GetStudentList(ctx context.Context, block int, current bool, debug bool) ([]*student.Student, error) {
+// StudentList returns a list of the students in the block given of the given teacher
+func (tchr *Teacher) StudentList(ctx context.Context, block int, debug bool) ([]*student.Student, error) {
 	ancestor := student.ParentKey(ctx, debug)
 	var sBlock string
 	if block == 0 {
@@ -213,12 +155,8 @@ func GetStudentList(ctx context.Context, block int, current bool, debug bool) ([
 	} else {
 		sBlock = "Teacher2"
 	}
-	usr, err := GetCurrent(ctx, current, debug)
-	if err != nil {
-		return make([]*student.Student, 0), err
-	}
-	q := datastore.NewQuery("Student").Ancestor(ancestor).Filter("Current =", current).Filter(sBlock+" =", usr.Email)
-	var students = make([]*student.Student, 0);
+	q := datastore.NewQuery("Student").Ancestor(ancestor).Filter("Current =", tchr.Current).Filter(sBlock+" =", tchr.Email)
+	var students = make([]*student.Student, 0)
 	keys, err := q.GetAll(ctx, &students)
 	if err == datastore.Done {
 		return make([]*student.Student, 0), errors.New(student.StudentNotFound)
@@ -232,25 +170,107 @@ func GetStudentList(ctx context.Context, block int, current bool, debug bool) ([
 	return students, nil
 }
 
-func Edit(ctx context.Context, teacher *Teacher) error {
-	key, err := datastore.DecodeKey(teacher.ID)
+// Delete removes the teacher with the given key
+func (tchr *Teacher) Delete(ctx context.Context) error {
+	key, err := datastore.DecodeKey(tchr.ID)
 	if err != nil {
 		return errors.New(err.Error())
 	}
-	_, err = datastore.Put(ctx, key, teacher)
+	err = datastore.Delete(ctx, key)
 	if err != nil {
 		return errors.New(err.Error())
 	}
 	return nil
 }
 
-func Delete(ctx context.Context, k *datastore.Key) error {
-	err := datastore.Delete(ctx, k)
+// Current returns the current Teacher
+func Current(ctx context.Context, current bool, debug bool) (*Teacher, error) {
+	usr := appUser.Current(ctx)
+	tchr, err := WithEmail(ctx, usr.Email, current, debug)
 	if err != nil {
-		return errors.New(err.Error())
+		return nil, err
 	}
-	return nil
+	return tchr, nil
 }
+
+// WithKey returns the teacher with the given key
+func WithKey(ctx context.Context, k *datastore.Key, debug bool) (*Teacher, error) {
+	var tchr = new(Teacher)
+	err := datastore.Get(ctx, k, tchr)
+	if err != nil {
+		return nil, errors.New(err.Error())
+	}
+	tchr.ID = k.Encode()
+	count, err := tchr.StudentCount(ctx, 0, debug)
+	if err != nil {
+		return nil, err
+	}
+	tchr.Block1.CurSize = count
+
+	count, err = tchr.StudentCount(ctx, 1, debug)
+	if err != nil {
+		return nil, err
+	}
+	tchr.Block2.CurSize = count
+	return tchr, nil
+}
+
+// WithEmail reterns the first teacher with matching email
+func WithEmail(ctx context.Context, email string, current bool, debug bool) (*Teacher, error) {
+	ancestor := parentKey(ctx, debug)
+	q := datastore.NewQuery("Teacher").Ancestor(ancestor).Filter("Email =", email).Filter("Current =", current)
+	t := q.Run(ctx)
+	var tchr Teacher
+	key, err := t.Next(&tchr)
+	if err == datastore.Done {
+		return nil, errors.New(TeacherNotFound)
+	}
+	if err != nil {
+		return nil, errors.New(err.Error())
+	}
+	tchr.ID = key.Encode()
+
+	count, err := tchr.StudentCount(ctx, 0, debug)
+	if err != nil {
+		return nil, err
+	}
+	tchr.Block1.CurSize = count
+
+	count, err = tchr.StudentCount(ctx, 1, debug)
+	if err != nil {
+		return nil, err
+	}
+	tchr.Block2.CurSize = count
+	return &tchr, nil
+}
+
+// All returns all of the teachers 
+func All(ctx context.Context, current bool, debug bool) ([]*Teacher, error) {
+	ancestor := parentKey(ctx, debug)
+	q := datastore.NewQuery("Teacher").Ancestor(ancestor).Filter("Current =", current)
+	var tchrs []*Teacher
+	keys, err := q.GetAll(ctx, &tchrs)
+	if err != nil {
+		return nil, errors.New(err.Error())
+	}
+	for i, tchr := range tchrs {
+		tchr.ID = keys[i].Encode()
+		count, err := tchr.StudentCount(ctx, 0, debug)
+		if err != nil {
+			return nil, err
+		}
+		tchr.Block1.CurSize = count
+
+		count, err = tchr.StudentCount(ctx, 1, debug)
+		if err != nil {
+			return nil, err
+		}
+		tchr.Block2.CurSize = count
+	}
+	return tchrs, nil
+}
+
+
 
 func parentKey(ctx context.Context, debug bool) *datastore.Key {
 	var keyLiteral string

@@ -16,7 +16,7 @@ app.controller('assignStudentController', function($scope, $rootScope, objServic
     var lowercaseQuery = angular.lowercase(query);
 
     return function filterFn(student) {
-      return angular.lowercase(student.name).indexOf(lowercaseQuery) === 0;
+      return angular.lowercase(student.Name).indexOf(lowercaseQuery) === 0;
     };
   };
   

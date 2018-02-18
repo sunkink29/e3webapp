@@ -3,63 +3,91 @@ package student
 import (
 	"golang.org/x/net/context"
 	"google.golang.org/appengine/datastore"
-	
-	"github.com/sunkink29/e3SelectionWebApp/user"
+
 	"github.com/sunkink29/e3SelectionWebApp/errors"
+	"github.com/sunkink29/e3SelectionWebApp/user"
 )
 
 const StudentNotFound = "Student not found"
 
 type Student struct {
-	ID string `datastore:"-"`
-	Email, Name string
+	ID                 string `datastore:"-"`
+	Email, Name        string
 	Teacher1, Teacher2 string
-	Current bool
+	Current            bool
 }
 
-func New(ctx context.Context, student *Student, debug bool) error {
+// New stores the given student as a new student
+func (stdnt *Student) New(ctx context.Context, debug bool) error {
 	pKey := ParentKey(ctx, debug)
 	k := datastore.NewIncompleteKey(ctx, "Student", pKey)
-	_, err := datastore.Put(ctx, k, student)
+	k, err := datastore.Put(ctx, k, stdnt)
 	if err != nil {
 		return errors.New(err.Error())
 	}
+	stdnt.ID = k.Encode()
 	return err
 }
 
-func Get(ctx context.Context, k *datastore.Key) (*Student, error) {
-	var usr Student
-	err := datastore.Get(ctx, k, &usr)
+// Edit changes the student with the given ID to the values given
+func (stdnt *Student) Edit(ctx context.Context) error {
+	key, err := datastore.DecodeKey(stdnt.ID)
 	if err != nil {
-		return nil, errors.New(err.Error())
+		return errors.New(err.Error())
 	}
-	usr.ID = k.Encode()
+	_, err = datastore.Put(ctx, key, stdnt)
 	if err != nil {
-		return nil, errors.New(err.Error())
+		return errors.New(err.Error())
 	}
-	return &usr, nil
+	return nil
 }
 
-func GetCurrent(ctx context.Context, current bool, debug bool) (*Student, error) {
-	curU, err := user.GetCurrent(ctx, debug)
+// Delete removes the student with the given key
+func (stdnt *Student) Delete(ctx context.Context) error {
+	key, err := datastore.DecodeKey(stdnt.ID)
+	if err != nil {
+		return errors.New(err.Error())
+	}
+	err = datastore.Delete(ctx, key)
+	if err != nil {
+		return errors.New(err.Error())
+	}
+	return nil
+}
+
+// Current returns the current student
+func Current(ctx context.Context, current bool, debug bool) (*Student, error) {
+	curU, err := user.Current(ctx, debug)
 	if err != nil {
 		return nil, err
 	}
-	usr, err := GetWithEmail(ctx, curU.Email, current, debug)
+	stdnt, err := WithEmail(ctx, curU.Email, current, debug)
 	if err != nil && err.(errors.Error).Message == StudentNotFound {
-		newS := Student{"",curU.Email,curU.Name,"","",current}
-		usr = &newS
-		err = New(ctx, &newS, debug)
+		newS := Student{"", curU.Email, curU.Name, "", "", current}
+		stdnt = &newS
+		err = newS.New(ctx, debug)
 		if err != nil {
 			return nil, err
 		}
 	} else if err != nil {
 		return nil, err
 	}
-	return usr, nil
+	return stdnt, nil
 }
 
-func GetWithEmail(ctx context.Context, email string, current bool, debug bool) (*Student, error) {
+// WithKey returns the student with the given key
+func WithKey(ctx context.Context, k *datastore.Key) (*Student, error) {
+	stdnt := new(Student)
+	err := datastore.Get(ctx, k, stdnt)
+	if err != nil {
+		return nil, errors.New(err.Error())
+	}
+	stdnt.ID = k.Encode()
+	return stdnt, nil
+}
+
+// WithEmail reterns the first student with matching email
+func WithEmail(ctx context.Context, email string, current bool, debug bool) (*Student, error) {
 	ancestor := ParentKey(ctx, debug)
 	q := datastore.NewQuery("Student").Ancestor(ancestor).Filter("Email =", email).Filter("Current =", current)
 	t := q.Run(ctx)
@@ -75,9 +103,10 @@ func GetWithEmail(ctx context.Context, email string, current bool, debug bool) (
 	return &user, nil
 }
 
-func GetAll(ctx context.Context, currentWeek bool, debug bool) ([]*Student, error) {
+// All returns all of the students
+func All(ctx context.Context, current bool, debug bool) ([]*Student, error) {
 	ancestor := ParentKey(ctx, debug)
-	q := datastore.NewQuery("Student").Ancestor(ancestor).Filter("Current =", currentWeek)
+	q := datastore.NewQuery("Student").Ancestor(ancestor).Filter("Current =", current)
 	var students []*Student
 	keys, err := q.GetAll(ctx, &students)
 	if err != nil {
@@ -89,26 +118,6 @@ func GetAll(ctx context.Context, currentWeek bool, debug bool) ([]*Student, erro
 	return students, nil
 }
 
-func Edit(ctx context.Context, student *Student) error {
-	key, err := datastore.DecodeKey(student.ID)
-	if err != nil {
-		return errors.New(err.Error())
-	}
-	_, err = datastore.Put(ctx, key, student)
-	if err != nil {
-		return errors.New(err.Error())
-	}
-	return nil
-}
-
-func Delete(ctx context.Context, k *datastore.Key) error {
-	err := datastore.Delete(ctx, k)
-	if err != nil {
-		return errors.New(err.Error())
-	}
-	return nil
-}
-
 func ParentKey(ctx context.Context, debug bool) *datastore.Key {
 	var keyLiteral string
 	if debug {
@@ -118,4 +127,3 @@ func ParentKey(ctx context.Context, debug bool) *datastore.Key {
 	}
 	return datastore.NewKey(ctx, "Student", keyLiteral, 0, nil)
 }
-

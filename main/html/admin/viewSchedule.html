@@ -21,7 +21,7 @@
                    <div style="transform: translateY(25%)" flex>{{ class.Block1.CurSize+' / ' + class.Block1.MaxSize }}</div>
                    <div style="transform: translateY(25%)" flex>{{ class.Block2.Description }}</div>
                    <div style="transform: translateY(25%)" flex>{{ class.Block2.CurSize+' / ' + class.Block2.MaxSize }}</div>
-                   <md-button ng-click="controller.showTeacherStudentList(class, false)" >View Student List</md-button>
+                   <md-button ng-click="controller.showTeacherStudentList(class)" >View Student List</md-button>
                  </div>
                </div>
              </md-tab>
@@ -41,7 +41,7 @@
                    <div style="transform: translateY(25%)" flex>{{ class.Block1.CurSize+' / ' + class.Block1.MaxSize }}</div>
                    <div style="transform: translateY(25%)" flex>{{ class.Block2.Description }}</div>
                    <div style="transform: translateY(25%)" flex>{{ class.Block2.CurSize+' / ' + class.Block2.MaxSize }}</div>
-                   <md-button ng-click="controller.showTeacherStudentList(class, true)" >View Student List</md-button>
+                   <md-button ng-click="controller.showTeacherStudentList(class)" >View Student List</md-button>
                  </div>
                </div>
              </md-tab>
@@ -58,7 +58,7 @@
         <div layout="row">
           <div layout='column' ng-repeat="column in controller.studentList" ng-init="outerIndex = $index;" flex>
             <div flex="50" style="max-height:50px" ng-class="$odd?'cell-shading':''" layout="row" ng-repeat="row in column">
-              <div style="transform: translateY(25%)" layout-padding flex>{{ (row.name!='')?row.name+' | grade:'+row.grade:row.name }}</div>
+              <div style="transform: translateY(25%)" layout-padding flex>{{ (row.Name!='')?row.Name+' | grade:'+row.Grade:row.Name }}</div>
               <!--<md-button style="height:30px" ng-show="(row.id != -1)" ng-click="controller.removeStudent($index, outerIndex)">Remove Student</md-button>-->
             </div>
           </div>
