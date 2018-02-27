@@ -1,4 +1,4 @@
-app.controller('adminMainViewController', function($scope, $rootScope, objService, $mdDialog) {
+app.controller('adminMainViewController', function($scope, $rootScope, $mdDialog) {
   var controller = this;
   $rootScope.adminControl = this;
   
@@ -62,10 +62,9 @@ app.controller('adminMainViewController', function($scope, $rootScope, objServic
       parent: angular.element(document.body),
       targetEvent: ev,
       clickOutsideToClose: true,
-      onRemoving: function() {
-        
+      onShowing: function() {
+      	$rootScope.viewSchedule.updateTeachers(false);
       }
     });
   };
-  controller.updateUsers();
 });

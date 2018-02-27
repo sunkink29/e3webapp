@@ -1,4 +1,4 @@
-app.controller('addUserController', function($scope, $rootScope, objService, $mdDialog) {
+app.controller('addUserController', function($scope, $rootScope, $mdDialog) {
   var controller = this;
   controller.newUser = {name: '', email: '', Teacher: '', Admin: ''};
   

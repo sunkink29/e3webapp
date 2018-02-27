@@ -1,8 +1,9 @@
-app.controller('teacherMainViewController', function($scope, $rootScope, objService, $timeout, $mdDialog, $mdToast) {
+app.controller('teacherMainViewController', function($scope, $rootScope, $timeout, $mdDialog, $mdToast) {
   var controller = this;
   $rootScope.mainView = controller;
   controller.NextStudents = [[{ID:-1,name:'loading'},{ID:-1,name:''}]];
   controller.currentStudents = [[{ID:-1,name:'loading'},{ID:-1,name:''}]];
+  controller.rootScope = $rootScope;
   
   controller.updateStudents = function (currentWeek) {
     if (currentWeek) {
@@ -33,7 +34,7 @@ app.controller('teacherMainViewController', function($scope, $rootScope, objServ
       clickOutsideToClose: true,
       onRemoving: function() {
         $rootScope.assign.onClose();
-      }
+      },
     });
   };
   

@@ -1,4 +1,4 @@
-app.controller('editUserController', function($scope, $rootScope, objService, $mdDialog) {
+app.controller('editUserController', function($scope, $rootScope, $mdDialog) {
   var controller = this;
   controller.selectedUser;
   

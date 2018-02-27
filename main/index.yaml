@@ -7,6 +7,11 @@ indexes:
   - name: Name
   - name: Teacher
   - name: Admin
+  
+- kind: User
+  ancestor: yes
+  properties:
+  - name: Name
 
 - kind: Teacher
   ancestor: yes
@@ -33,3 +38,9 @@ indexes:
   - name: Teacher1
   - name: Teacher2
   - name: Current
+  
+- kind: Student
+  ancestor: yes
+  properties:
+  - name: Current
+  - name: Name

@@ -1,4 +1,4 @@
-app.controller('mainViewController', function($scope, $rootScope,objService, $timeout, $mdDialog) {
+app.controller('mainViewController', function($scope, $rootScope, $timeout, $mdDialog) {
   var controller = this;
   controller.nextClasses = [{name:'Loading'}];
   controller.currentClasses = [{name:'Loading'}];

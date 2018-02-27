@@ -1,4 +1,4 @@
-app.controller('viewScheduleController', function($scope, $rootScope, objService, $mdDialog) {
+app.controller('viewScheduleController', function($scope, $rootScope, $mdDialog) {
   var controller = this;
   controller.selectedTeacher;
   controller.nextTeacherList;
@@ -59,6 +59,4 @@ app.controller('viewScheduleController', function($scope, $rootScope, objService
   controller.closeDialog = function() {
     $mdDialog.hide();
   };
-  
-  controller.updateTeachers(false);
 });

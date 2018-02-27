@@ -23,7 +23,8 @@ type webMethod func(dec *json.Decoder, w http.ResponseWriter, r *http.Request) e
 
 var funcMap = map[string]interface{}{
 	"includeHTML": includeHTML,
-	"include":     include}
+	"include":     include,
+	"clientID": user.ClientID}
 var indexTemplate = template.Must(template.New("index").Funcs(funcMap).ParseFiles("html/index.html"))
 var fileMux sync.Mutex
 
@@ -42,6 +43,7 @@ func init() {
 	http.HandleFunc("/", root)
 	http.HandleFunc("/async", async)
 	http.HandleFunc("/usrswitch", usrswitch)
+	http.HandleFunc("/auth", user.AuthHandle)
 }
 
 func root(w http.ResponseWriter, r *http.Request) {
@@ -56,6 +58,9 @@ func root(w http.ResponseWriter, r *http.Request) {
 	}
 	//	u.Admin = false
 	//	u.Teacher = false
+	
+	user.InitAuth(ctx)
+	
 	err = indexTemplate.ExecuteTemplate(w, "index.html", u)
 	if err != nil {
 		err = errors.New(err.Error())
@@ -80,10 +85,15 @@ func async(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		err := method(dec, w, r)
 		if err != nil {
+			if err.Error() == "redirect" {
+				redirect := err.(errors.Redirect)
+				http.Redirect(w , r, redirect.URL, redirect.Code)
+				return
+			}
 			url := r.URL.String()
-			debug := r.Form.Get("debug") == "true"
-			usr, _ := user.Current(ctx, debug)
-			s := usr.ID
+//			debug := r.Form.Get("debug") == "true"
+//			usr,_ := user.Current(ctx, debug)
+			s := "" //usr.ID
 			http.Error(w, err.(errors.Error).HttpError(ctx, s, url, r), http.StatusInternalServerError)
 			return
 		}

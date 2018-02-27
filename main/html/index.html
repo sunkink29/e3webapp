@@ -59,7 +59,7 @@
       	$.ajax({
 		  type: "GET",
 		  url: "/async",
-		  data: {"method": method ,"data": sData }, // An object, not a string.
+		  data: {"method": method ,"data": sData },
 		  contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
 		  dataType: "json",
 		  success: callback
@@ -68,9 +68,11 @@
 
       var app = angular.module('SelectionApp', ['ngMaterial']);
     </script>
-    <script src="/js/objService.js"></script>
     {{ if .Admin }}
       <script src="/js/admin/adminMainViewController.js"></script>
+      <script >var clientId = {{ clientID }}</script>
+      <script src="/js/admin/importSelector.js"></script>
+      <script type="text/javascript" src="https://apis.google.com/js/api.js?onload=onApiLoad"></script>
       {{ includeHTML "html/admin/addUser.html" }}
       {{ includeHTML "html/admin/editUser.html" }}
       {{ includeHTML "html/admin/removeUser.html" }}

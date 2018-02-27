@@ -12,7 +12,7 @@
         <div layout="row">
           <div layout='column' ng-repeat="column in controller.NextStudents" ng-init="outerIndex = $index;" flex>
             <div flex="50" style="max-height:50px" ng-class="$odd?'cell-shading':''" layout="row" ng-repeat="row in column">
-              <div style="transform: translateY(25%)" layout-padding flex>{{ (row.Name!='')?row.Name+' | grade:'+row.grade:row.Name }}</div>
+              <div style="transform: translateY(25%)" layout-padding flex>{{ (row.Name!='')?row.Name+' | grade:'+row.Grade:row.Name }}</div>
               <md-button style="height:30px" ng-show="(row.ID != -1)" ng-click="controller.removeStudent($index, outerIndex)">Remove Student</md-button>
             </div>
           </div>
@@ -20,8 +20,8 @@
         <div layout="row">
           <div layout='column' ng-repeat="column in controller.NextStudents" ng-init="outerIndex = $index" flex>
             <div flex="50" layout="row">
-              <md-button flex="50" class="" ng-click="controller.showAssignDialog($event,outerIndex)">Add Student</md-button>
-              <md-button flex="50" class="" ng-click="controller.showEditDialog($event,outerIndex)">Edit Class</md-button>
+              <md-button flex="50" ng-disabled="controller.rootScope.edit.addButton{{outerIndex}}" ng-click="controller.showAssignDialog($event,outerIndex)">Add Student</md-button>
+              <md-button flex="50" ng-click="controller.showEditDialog($event,outerIndex)">Edit Class</md-button>
             </div>
           </div>
         </div>
@@ -36,7 +36,7 @@
         <div layout="row">
           <div layout='column' ng-repeat="column in controller.currentStudents" ng-init="outerIndex = $index;" flex>
             <div flex="50" style="max-height:50px" ng-class="$odd?'cell-shading':''" layout="row" ng-repeat="row in column">
-              <div style="transform: translateY(25%)" layout-padding flex>{{ (row.Name!='')?row.Name+' | grade:'+row.grade:row.Name }}</div>
+              <div style="transform: translateY(25%)" layout-padding flex>{{ (row.Name!='')?row.Name+' | grade:'+row.Grade:row.Name }}</div>
             </div>
           </div>
         </div>

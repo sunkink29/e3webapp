@@ -1,4 +1,4 @@
-app.controller('assignStudentController', function($scope, $rootScope, objService, $timeout, $mdDialog) {
+app.controller('assignStudentController', function($scope, $rootScope, $timeout, $mdDialog) {
   var controller = this;
   $rootScope.assign = this;
   controller.studentList = [{id:-1,name:'Loading'}];
@@ -53,14 +53,22 @@ app.controller('assignStudentController', function($scope, $rootScope, objServic
     controller.submitDisabled = true;
   };
   
-  controller.changeStudent = function() {
+  controller.GetPreviousOpen = function() {
+  	callMethod("studentClassOpen", {StdntID: controller.selectedStudent.ID, Block: $rootScope.block}, 
+  			controller.changeStudent);
+  }
+  
+  controller.changeStudent = function(previousOpen) {
     var selectedStudent = controller.selectedStudent;
-    var block = $rootScope.block;
-    controller.submitDisabled = true;
-    var classFull = $rootScope.edit.currentBlockInfo[block].CurSize >= $rootScope.edit.currentBlockInfo[block].MaxSize;
-    if (!controller.selectDisabled && selectedStudent !== null) {
-      controller.submitDisabled = block === 0?!selectedStudent.Block1.BlockOpen: !selectedStudent.Block2.BlockOpen || classFull;
-    }
+    if (selectedStudent !== null) {
+	    var block = $rootScope.block;
+	    controller.submitDisabled = true;
+	    var classFull = $rootScope.edit.currentBlockInfo[block].CurSize >= $rootScope.edit.currentBlockInfo[block].MaxSize;
+	    if (!controller.selectDisabled && selectedStudent !== null) {
+	      controller.submitDisabled = !previousOpen || classFull;
+	    }
+	}
+
   };
   
   controller.closeDialog = function() {
@@ -73,6 +81,5 @@ app.controller('assignStudentController', function($scope, $rootScope, objServic
     controller.selectedStudent = null;
     controller.submitDisabled = true;
   };
-  
-  controller.updateStudents();
+  controller.updateStudents()
 });

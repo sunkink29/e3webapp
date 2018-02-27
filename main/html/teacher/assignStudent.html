@@ -19,14 +19,13 @@
           md-selected-item="controller.selectedStudent"
           md-search-text-change=""
           md-search-text="controller.searchText"
-          md-selected-item-change="controller.changeStudent()"
+          md-selected-item-change="controller.GetPreviousOpen()"
           md-items="student in controller.querySearch(controller.searchText)"
           md-item-text="student.Name"
           md-min-length="0"
           placeholder="Student">
           <md-item-template>
-            <span md-highlight-text="controller.searchText" md-highlight-flags="^i"
-               >{{student.Name}} | Current class: {{ (controller.rootScope.block == 0)?(student.Block1.BlockOpen? 'Open':'closed'): (student.Block2.BlockOpen? 'Open':'closed')}}</span>
+            <span md-highlight-text="controller.searchText" md-highlight-flags="^i">{{student.Name}}</span>
           </md-item-template>
           <md-not-found>No Student Found</md-not-found>
         </md-autocomplete>
@@ -40,7 +39,6 @@
         </md-input-container>-->
       </md-dialog-content>
       <md-dialog-actions>
-        <md-button class="" ng-click="controller.updateStudents()">refresh</md-button>
         <md-button class="" ng-click="controller.closeDialog()">Close</md-button>
         <md-button class="" ng-disabled="controller.submitDisabled" ng-click="controller.addStudent()">Add Student</md-button>
       </md-dialog-actions>

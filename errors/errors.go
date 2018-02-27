@@ -12,6 +12,7 @@ import (
 //	"google.golang.org/api/option"
 //	"google.golang.org/appengine/datastore"
 	"google.golang.org/appengine/user"
+	"google.golang.org/appengine/log"
 )
 
 const AccessDenied = "Access Denied"
@@ -72,7 +73,17 @@ func (this Error) HttpError(ctx context.Context, usr string, url string, r *http
 //		output = sLog
 
 	}
+	log.Errorf(ctx, "%s\n%s", output, logging)
 	return output
+}
+
+type Redirect struct {
+	URL string `json:"url"`
+	Code int `json:"code"`
+}
+
+func (this Redirect) Error() string {
+	return"redirect"
 }
 
 func New(input string) error {

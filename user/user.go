@@ -2,6 +2,8 @@ package user
 
 import (
 	"golang.org/x/net/context"
+	"golang.org/x/oauth2"
+	"encoding/json"
 	"google.golang.org/appengine/datastore"
 	appUser "google.golang.org/appengine/user"
 
@@ -13,6 +15,59 @@ type User struct {
 	ID             string `datastore:"-"`
 	Email, Name    string
 	Teacher, Admin bool
+	AuthState string `json:"-"`
+	Token *oauth2.Token `json:"-"`
+}
+
+func (u *User) Load(ps []datastore.Property) error {
+	var err error
+	for _, p := range ps {
+		switch p.Name {
+		case "Email":
+			u.Email = p.Value.(string)
+		case "Name":
+			u.Name = p.Value.(string)
+		case "Teacher":
+			u.Teacher = p.Value.(bool)
+		case "Admin":
+			u.Admin = p.Value.(bool)
+		case "AuthState":
+			u.AuthState = p.Value.(string)
+		case "Token":
+			if p.Value.(string) != "null" {
+				u.Token = new (oauth2.Token)
+				tByte := []byte(p.Value.(string))
+				err = json.Unmarshal(tByte, u.Token)
+			}
+		}
+	}
+	return err
+}
+
+func (u *User) Save() ([]datastore.Property, error) {
+	bToken, err := json.Marshal(u.Token)
+	sToken := string(bToken[:])
+	return []datastore.Property{
+		{
+			Name:  "Email",
+			Value: u.Email,
+		}, {
+			Name:  "Name",
+			Value: u.Name,
+		}, {
+			Name: "Teacher",
+			Value: u.Teacher,
+		}, {
+			Name: "Admin",
+			Value: u.Admin,
+		}, {
+			Name: "AuthState",
+			Value: u.AuthState,
+		}, {
+			Name: "Token",
+			Value: sToken,
+		},
+	}, err
 }
 
 // New stores the given user as a new user
@@ -95,7 +150,7 @@ func WithEmail(ctx context.Context, email string, debug bool) (*User, error) {
 // GetAll returns all users
 func All(ctx context.Context, debug bool) ([]*User, error) {
 	ancestor := parentKey(ctx, debug)
-	q := datastore.NewQuery("User").Ancestor(ancestor)
+	q := datastore.NewQuery("User").Ancestor(ancestor).Order("Name")
 	var users []*User
 	keys, err := q.GetAll(ctx, &users)
 	if err != nil {

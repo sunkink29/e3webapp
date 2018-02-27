@@ -13,6 +13,7 @@ const StudentNotFound = "Student not found"
 type Student struct {
 	ID                 string `datastore:"-"`
 	Email, Name        string
+	Grade int
 	Teacher1, Teacher2 string
 	Current            bool
 }
@@ -63,7 +64,7 @@ func Current(ctx context.Context, current bool, debug bool) (*Student, error) {
 	}
 	stdnt, err := WithEmail(ctx, curU.Email, current, debug)
 	if err != nil && err.(errors.Error).Message == StudentNotFound {
-		newS := Student{"", curU.Email, curU.Name, "", "", current}
+		newS := Student{Email: curU.Email, Name: curU.Name,Current: current}
 		stdnt = &newS
 		err = newS.New(ctx, debug)
 		if err != nil {
@@ -106,7 +107,7 @@ func WithEmail(ctx context.Context, email string, current bool, debug bool) (*St
 // All returns all of the students
 func All(ctx context.Context, current bool, debug bool) ([]*Student, error) {
 	ancestor := ParentKey(ctx, debug)
-	q := datastore.NewQuery("Student").Ancestor(ancestor).Filter("Current =", current)
+	q := datastore.NewQuery("Student").Ancestor(ancestor).Filter("Current =", current).Order("Name")
 	var students []*Student
 	keys, err := q.GetAll(ctx, &students)
 	if err != nil {

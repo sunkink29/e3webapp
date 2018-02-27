@@ -1,4 +1,4 @@
-app.controller('changeClassController', function($scope, $rootScope,objService, $mdDialog) {
+app.controller('changeClassController', function($scope, $rootScope, $mdDialog) {
   var controller = this;
   controller.rootScope = $rootScope;
   $rootScope.changeClass = $scope;

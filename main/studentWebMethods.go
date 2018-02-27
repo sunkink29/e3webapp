@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"google.golang.org/appengine"
+	"google.golang.org/appengine/datastore"
 
 	"github.com/sunkink29/e3SelectionWebApp/errors"
 	"github.com/sunkink29/e3SelectionWebApp/student"
@@ -20,6 +21,7 @@ func addStudentMethods() {
 	addToWebMethods("editStudent", editStudent)
 	addToWebMethods("deleteStudent", deleteStudent)
 	addToWebMethods("getAllStudents", getAllStudents)
+	addToWebMethods("studentClassOpen", studentClassOpen)
 }
 
 func setTeacher(dec *json.Decoder, w http.ResponseWriter, r *http.Request) error {
@@ -160,52 +162,68 @@ func deleteStudent(dec *json.Decoder, w http.ResponseWriter, r *http.Request) er
 	return errors.New(errors.AccessDenied)
 }
 
+var studentList []*student.Student
+
 func getAllStudents(dec *json.Decoder, w http.ResponseWriter, r *http.Request) error {
 	ctx := appengine.NewContext(r)
 	debug := r.Form.Get("debug") == "true"
-	var current bool
-	if err := dec.Decode(&current); err != nil {
-		return errors.New(err.Error())
-	}
-	students, err := student.All(ctx, current, debug)
-	if err != nil {
-		return err
-	}
-
-	var bStudents = make([]struct {
-		ID, Email, Name string
-		Block1, Block2  teacher.Block
-	}, len(students))
-	for i, s := range students {
-		bStudents[i].ID = s.ID
-		bStudents[i].Email = s.Email
-		bStudents[i].Name = s.Name
-		teacher1, err := teacher.WithEmail(ctx, s.Teacher1, current, debug)
-		if err != nil && s.Teacher1 != "" {
+	if len(studentList) == 0 {
+		var err error
+		studentList, err = student.All(ctx, false, debug)
+		if err != nil {
 			return err
 		}
-		if s.Teacher1 != "" {
-			bStudents[i].Block1 = teacher1.Block1
-		} else {
-			bStudents[i].Block1.BlockOpen = true
-		}
-
-		teacher2, err := teacher.WithEmail(ctx, s.Teacher2, current, debug)
-		if err != nil && s.Teacher2 != "" {
-			return err
-		}
-		if s.Teacher2 != "" {
-			bStudents[i].Block2 = teacher2.Block2
-		} else {
-			bStudents[i].Block1.BlockOpen = true
-		}
 	}
 
-	jStudents, err := json.Marshal(bStudents)
+	jStudents, err := json.Marshal(studentList)
 	if err != nil {
 		return errors.New(err.Error())
 	}
 	s := string(jStudents[:])
+
+	fmt.Fprintln(w, s)
+	return nil
+}
+
+func studentClassOpen(dec *json.Decoder, w http.ResponseWriter, r *http.Request) error {
+	ctx := appengine.NewContext(r)
+	var variables struct{StdntID string; Block int}
+	if err := dec.Decode(&variables); err != nil {
+		return errors.New(err.Error())
+	}
+	
+	key, err := datastore.DecodeKey(variables.StdntID)
+	if err != nil {
+		return errors.New(err.Error())
+	}
+	stdnt, err := student.WithKey(ctx, key)
+	if err != nil {
+		return err
+	}
+	
+	open := true
+	if variables.Block == 0 {
+		Teacher, err := teacher.WithEmail(ctx, stdnt.Teacher1, false, false)
+		
+		if err != nil && err.(errors.Error).Message != teacher.TeacherNotFound {
+			return err
+		} else if err == nil {
+			open = Teacher.Block1.BlockOpen
+		}
+	} else {
+		Teacher, err := teacher.WithEmail(ctx, stdnt.Teacher2, false, false)
+		if err != nil && err.(errors.Error).Message != teacher.TeacherNotFound {
+			return err
+		} else if err == nil {
+			open = Teacher.Block2.BlockOpen
+		}
+	}
+	
+	jOutput, err := json.Marshal(open)
+	if err != nil {
+		return errors.New(err.Error())
+	}
+	s := string(jOutput[:])
 
 	fmt.Fprintln(w, s)
 	return nil

@@ -1,4 +1,4 @@
-app.controller('removeUserController', function($scope, $rootScope, objService, $mdDialog) {
+app.controller('removeUserController', function($scope, $rootScope, $mdDialog) {
   var controller = this;
   controller.selectedUser;
   
