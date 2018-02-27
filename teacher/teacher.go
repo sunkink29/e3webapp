@@ -5,8 +5,8 @@ import (
 	"google.golang.org/appengine/datastore"
 	appUser "google.golang.org/appengine/user"
 
-	"github.com/sunkink29/e3SelectionWebApp/errors"
-	"github.com/sunkink29/e3SelectionWebApp/student"
+	"github.com/sunkink29/e3webapp/errors"
+	"github.com/sunkink29/e3webapp/student"
 )
 
 const TeacherNotFound = "Teacher not found"

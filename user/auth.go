@@ -13,7 +13,7 @@ import (
     "google.golang.org/appengine"
     "google.golang.org/appengine/datastore"
     
-    "github.com/sunkink29/e3SelectionWebApp/errors"
+    "github.com/sunkink29/e3webapp/errors"
 )
 
 // Credentials which stores google ids.

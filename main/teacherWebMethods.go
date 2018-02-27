@@ -8,10 +8,10 @@ import (
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/datastore"
 
-	"github.com/sunkink29/e3SelectionWebApp/errors"
-	"github.com/sunkink29/e3SelectionWebApp/student"
-	"github.com/sunkink29/e3SelectionWebApp/teacher"
-	"github.com/sunkink29/e3SelectionWebApp/user"
+	"github.com/sunkink29/e3webapp/errors"
+	"github.com/sunkink29/e3webapp/student"
+	"github.com/sunkink29/e3webapp/teacher"
+	"github.com/sunkink29/e3webapp/user"
 )
 
 func addTeacherMethods() {

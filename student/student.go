@@ -4,8 +4,8 @@ import (
 	"golang.org/x/net/context"
 	"google.golang.org/appengine/datastore"
 
-	"github.com/sunkink29/e3SelectionWebApp/errors"
-	"github.com/sunkink29/e3SelectionWebApp/user"
+	"github.com/sunkink29/e3webapp/errors"
+	"github.com/sunkink29/e3webapp/user"
 )
 
 const StudentNotFound = "Student not found"

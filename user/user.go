@@ -7,7 +7,7 @@ import (
 	"google.golang.org/appengine/datastore"
 	appUser "google.golang.org/appengine/user"
 
-	"github.com/sunkink29/e3SelectionWebApp/errors"
+	"github.com/sunkink29/e3webapp/errors"
 )
 
 // User is a struct that stores the information and permissions for a user
