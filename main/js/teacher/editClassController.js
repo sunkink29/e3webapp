@@ -4,11 +4,11 @@ app.controller('editClassController', function($scope, $rootScope, $timeout, $md
   controller.rootScope.edit = this;
   controller.currentBlockInfo = [{Subject:'',Description:'',RoomNumber:'',CurSize: '',MaxSize:'',BlockOpen:''},
   {Subject:'',Description:'',RoomNumber:'',CurSize: '',MaxSize:'',BlockOpen:''}];
+  controller.addButton0 = true;
   controller.addButton1 = true;
-  controller.addButton2 = true;
   
   controller.updateBlockInfo = function() {
-    callMethod("getBlocks", null, controller.showBlockInfo);
+    getMethod("/teacher/getblocks", null, controller.showBlockInfo);
   };
   
   controller.showBlockInfo = function(message) {
@@ -19,7 +19,7 @@ app.controller('editClassController', function($scope, $rootScope, $timeout, $md
   };
   
   controller.submitEdit = function() {
-    callMethod("setBlocks", controller.currentBlockInfo, controller.showBlockInfo);
+    postMethod("/teacher/setblocks", controller.currentBlockInfo);
     controller.checkAddButton();
     controller.closeDialog();
   };
@@ -29,16 +29,30 @@ app.controller('editClassController', function($scope, $rootScope, $timeout, $md
   };
   
   controller.checkAddButton = function() {
-  	if (controller.currentBlockInfo[0].MaxSize > 0) {
-    	controller.addButton0 = false;
-    }
-    if (controller.currentBlockInfo[1].MaxSize > 0) {
-    	controller.addButton1 = false;
-    }  
+    controller.addButton0 = controller.currentBlockInfo[0].MaxSize <= $rootScope.mainView.NextStudents[0].length;
+   	controller.addButton1 = controller.currentBlockInfo[1].MaxSize <= $rootScope.mainView.NextStudents[1].length;
   };
   
-  controller.onClose = function() {
-//    controller.updateBlockInfo();
+  $(window).on('hashchange', function() {
+	if (window.location.hash === "#editBlock0") {
+		$rootScope.block = 0;
+		controller.showDialog();
+	} else if (window.location.hash === "#editBlock1") {
+		$rootScope.block = 1;
+		controller.showDialog();
+	}
+  });
+  
+  controller.showDialog = function() {
+    $mdDialog.show({
+      contentElement: '#editBlock',
+      parent: angular.element(document.body),
+      targetEvent: $rootScope.ev,
+      clickOutsideToClose: true,
+      onRemoving: function() {
+        window.location.hash = "teacher";
+      }
+    });
   };
   
   controller.updateBlockInfo();

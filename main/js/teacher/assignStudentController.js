@@ -23,7 +23,7 @@ app.controller('assignStudentController', function($scope, $rootScope, $timeout,
   controller.updateStudents = function() {
     controller.selectDisabled = false;
     controller.selectedStudent = null;
-    callMethod("getAllStudents", false, controller.showStudents);
+    getMethod("/student/getall", {current: false}, controller.showStudents);
   };
   
   controller.showStudents = function(students) {
@@ -42,7 +42,7 @@ app.controller('assignStudentController', function($scope, $rootScope, $timeout,
     var selectedStudent = controller.selectedStudent;
     var studentId = selectedStudent.ID;
     var block = $rootScope.block;
-    callMethod("addStudentToClass", {key: studentId, Block: block}, controller.showStudents);
+    postMethod("/teacher/addstudent", {Key: studentId, Block: block}, controller.showStudents);
     var studentTable = $rootScope.mainView.NextStudents;
     studentTable[block][studentTable[block].length] = selectedStudent;
     controller.closeDialog();
@@ -54,7 +54,7 @@ app.controller('assignStudentController', function($scope, $rootScope, $timeout,
   };
   
   controller.GetPreviousOpen = function() {
-  	callMethod("studentClassOpen", {StdntID: controller.selectedStudent.ID, Block: $rootScope.block}, 
+  	getMethod("/student/open", {id: controller.selectedStudent.ID, Block: $rootScope.block}, 
   			controller.changeStudent);
   }
   
@@ -68,11 +68,34 @@ app.controller('assignStudentController', function($scope, $rootScope, $timeout,
 	      controller.submitDisabled = !previousOpen || classFull;
 	    }
 	}
-
+	$scope.$apply();
   };
   
   controller.closeDialog = function() {
     $mdDialog.hide();
+  };
+  
+  $(window).on('hashchange', function() {
+	if (window.location.hash === "#assign0") {
+		$rootScope.block = 0;
+		controller.showDialog();
+	} else if (window.location.hash === "#assign1") {
+		$rootScope.block = 1;
+		controller.showDialog();
+	}
+  });
+  
+  controller.showDialog = function() {
+    $mdDialog.show({
+      contentElement: '#assign',
+      parent: angular.element(document.body),
+      targetEvent: $rootScope.ev,
+      clickOutsideToClose: true,
+      onRemoving: function() {
+        controller.onClose();
+        window.location.hash = "teacher";
+      },
+    });
   };
   
   controller.onClose = function() {

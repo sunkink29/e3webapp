@@ -14,7 +14,7 @@ app.controller('mainViewController', function($scope, $rootScope, $timeout, $mdD
       controller.nextClasses = [{name:'Loading'}];
     }
     controller.currentWeek = currentWeek;
-    callMethod("getCurrentStudentBlocks", currentWeek, controller.updateTeachers);
+    getMethod("/student/getteachers", {current: currentWeek}, controller.updateTeachers);
   };
   
   controller.updateTeachers = function (teachers) {
@@ -34,22 +34,9 @@ app.controller('mainViewController', function($scope, $rootScope, $timeout, $mdD
     $scope.$apply();
   };
   
-  controller.changeClass = function(block) {
-    showPage('changeClass');
-    $rootScope.requestedChange = controller.nextClasses[block];
-  };
-  
-  controller.showChangeDialog = function(ev,block) {
-    $rootScope.requestedChange = controller.nextClasses[block];
-    $mdDialog.show({
-      contentElement: '#change',
-      parent: angular.element(document.body),
-      targetEvent: ev,
-      clickOutsideToClose: true,
-      onRemoving: function() {
-        $rootScope.changeClass.onClose();
-      }
-    });
+  controller.openDialog = function(ev, block) {
+  	controller.rootScope.ev = ev;
+  	location.hash='#change'+block;
   };
   
   controller.requestTeachers(false);

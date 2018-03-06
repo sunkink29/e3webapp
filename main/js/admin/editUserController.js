@@ -18,9 +18,31 @@ app.controller('editUserController', function($scope, $rootScope, $mdDialog) {
   };
   
   controller.editUser = function(user) {
-    callMethod("editUser", user, null);
+    postMethod("/admin/edituser", user, null);
     $rootScope.adminControl.updateUsers();
     controller.closeDialog();
+  };
+  
+  $(window).on('hashchange', function() {
+	if (window.location.hash === "#editUser") {
+		controller.showDialog();
+	}
+  });
+  
+  controller.showDialog = function() {
+    $mdDialog.show({
+      contentElement: '#editUser',
+      parent: angular.element(document.body),
+      targetEvent: $rootScope.ev,
+      clickOutsideToClose: true,
+      onRemoving: function() {
+        controller.resetUser();
+        window.location.hash = "admin";
+      },
+      onShowing: function() {
+      	$rootScope.adminControl.updateUsers();
+      }
+    });
   };
   
   controller.closeDialog = function() {

@@ -5,10 +5,29 @@ app.controller('addUserController', function($scope, $rootScope, $mdDialog) {
   controller.rootScope = $rootScope;
   controller.rootScope.addUser = this;
   
+  $(window).on('hashchange', function() {
+	if (window.location.hash === "#addUser") {
+		controller.showDialog();
+	}
+  });
+  
+  controller.showDialog = function() {
+    $mdDialog.show({
+      contentElement: '#addUser',
+      parent: angular.element(document.body),
+      targetEvent: $rootScope.ev,
+      clickOutsideToClose: true,
+      onRemoving: function() {
+        controller.resetUser();
+        window.location.hash = "admin";
+      }
+    });
+  };
+  
   controller.addUser = function(user) {
   	user.Teacher = user.Teacher || false;
   	user.Admin = user.Admin || false;
-    callMethod("newUser",user);
+    postMethod("/admin/newuser",user);
     controller.closeDialog();
   };
   

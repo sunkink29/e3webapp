@@ -1,6 +1,5 @@
 <div ng-controller="teacherMainViewController as controller" layout-padding>
   <md-content>
-    <h1 flex>View Students</h1>
     <md-tabs md-dynamic-height md-border-bottom>
       <md-tab label="next">
         <div layout="row" layout-padding>
@@ -20,8 +19,8 @@
         <div layout="row">
           <div layout='column' ng-repeat="column in controller.NextStudents" ng-init="outerIndex = $index" flex>
             <div flex="50" layout="row">
-              <md-button flex="50" ng-disabled="controller.rootScope.edit.addButton{{outerIndex}}" ng-click="controller.showAssignDialog($event,outerIndex)">Add Student</md-button>
-              <md-button flex="50" ng-click="controller.showEditDialog($event,outerIndex)">Edit Class</md-button>
+              <md-button flex="50" ng-disabled="controller.rootScope.edit.addButton{{outerIndex}}" ng-click="controller.openDialog($event, '#assign',outerIndex)">Add Student</md-button>
+              <md-button flex="50" ng-click="controller.openDialog($event, '#editBlock',outerIndex)">Edit Class</md-button>
             </div>
           </div>
         </div>

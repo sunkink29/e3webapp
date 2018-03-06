@@ -20,7 +20,6 @@ type User struct {
 }
 
 func (u *User) Load(ps []datastore.Property) error {
-	var err error
 	for _, p := range ps {
 		switch p.Name {
 		case "Email":
@@ -37,11 +36,14 @@ func (u *User) Load(ps []datastore.Property) error {
 			if p.Value.(string) != "null" {
 				u.Token = new (oauth2.Token)
 				tByte := []byte(p.Value.(string))
-				err = json.Unmarshal(tByte, u.Token)
+				err := json.Unmarshal(tByte, u.Token)
+				if err != nil {
+					u.Token = nil
+				}
 			}
 		}
 	}
-	return err
+	return nil
 }
 
 func (u *User) Save() ([]datastore.Property, error) {

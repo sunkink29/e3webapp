@@ -19,8 +19,8 @@ import (
 // Credentials which stores google ids.
 type Credentials struct {
 	APIKey 	string
-    Cid     string `datastore:"clientID"`
-    Csecret string `datastore:"clientSecret"`
+    Cid     string `datastore:"ClientID"`
+    Csecret string `datastore:"ClientSecret"`
     ID		string
     URL	string `datastore:"RedirectURL"`
 }
@@ -34,8 +34,12 @@ func randToken() string {
 	return base64.StdEncoding.EncodeToString(b)
 }
 
-func ClientID() (string) {
+func ClientID() string {
 	return cred.Cid
+}
+
+func ApiKey() string {
+	return cred.APIKey
 }
 
 func InitAuth(ctx context.Context) error {

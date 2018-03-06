@@ -14,7 +14,7 @@
             <div flex></div>
           </div>
           <div layout="column" layout-padding>
-            <div layout='row' ng-repeat="class in controller.classes">
+            <div layout='row' ng-repeat="class in controller.classes" ng-if="((controller.rootScope.requestedChange.curBlock == 0)?class.Block1.MaxSize: class.Block2.MaxSize) > 0 && controller.rootScope.requestedChange.Email !== class.Email">
               <div style="transform: translateY(25%)" flex>{{ class.Name }}</div>
               <div style="transform: translateY(25%)" flex>{{ (controller.rootScope.requestedChange.curBlock == 0)?class.Block1.RoomNumber: class.Block2.RoomNumber }}</div>
               <div style="transform: translateY(25%)" flex>{{ (controller.rootScope.requestedChange.curBlock == 0)?class.Block1.BlockOpen?'Open':'closed': class.Block2.BlockOpen?'Open':'closed'}}</div>

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/datastore"
@@ -14,24 +15,29 @@ import (
 	"github.com/sunkink29/e3webapp/user"
 )
 
-func addStudentMethods() {
-	addToWebMethods("setTeacher", setTeacher)
-	addToWebMethods("getCurrentStudentBlocks", getCurrentStudentBlocks)
-	addToWebMethods("newStudent", newStudent)
-	addToWebMethods("editStudent", editStudent)
-	addToWebMethods("deleteStudent", deleteStudent)
-	addToWebMethods("getAllStudents", getAllStudents)
-	addToWebMethods("studentClassOpen", studentClassOpen)
+func addStudentHandle(url string, handle appHandler) {
+	http.Handle("/api/student/"+url, handle)
 }
 
-func setTeacher(dec *json.Decoder, w http.ResponseWriter, r *http.Request) error {
+func addStudentMethods() {
+	addStudentHandle("setteacher", appHandler(setTeacher))
+	addStudentHandle("getteachers", appHandler(getCurrentStudentBlocks))
+	addStudentHandle("new", appHandler(newStudent))
+	addStudentHandle("edit", appHandler(editStudent))
+	addStudentHandle("delete", appHandler(deleteStudent))
+	addStudentHandle("getall", appHandler(getAllStudents))
+	addStudentHandle("open", appHandler(studentClassOpen))
+}
+
+func setTeacher(w http.ResponseWriter, r *http.Request) error {
 	ctx := appengine.NewContext(r)
 	debug := r.Form.Get("debug") == "true"
+	decoder := json.NewDecoder(r.Body)
 	var variables struct {
-		Teacher string
+		ID string
 		Block   int
 	}
-	if err := dec.Decode(&variables); err != nil {
+	if err := decoder.Decode(&variables); err != nil {
 		return errors.New(err.Error())
 	}
 
@@ -39,7 +45,11 @@ func setTeacher(dec *json.Decoder, w http.ResponseWriter, r *http.Request) error
 	if err != nil {
 		return err
 	}
-	newTeacher, err := teacher.WithEmail(ctx, variables.Teacher, false, debug)
+	key, err := datastore.DecodeKey(variables.ID)
+	if err != nil {
+		return errors.New(err.Error())
+	}
+	newTeacher, err := teacher.WithKey(ctx, key, debug)
 	if err != nil {
 		return err
 	}
@@ -55,7 +65,7 @@ func setTeacher(dec *json.Decoder, w http.ResponseWriter, r *http.Request) error
 		newFull := newTeacher.Block1.CurSize >= newTeacher.Block1.MaxSize
 
 		if prevOpen && newOpen && !newFull {
-			stdnt.Teacher1 = variables.Teacher
+			stdnt.Teacher1 = newTeacher.Email
 		}
 	} else {
 		prevTeacher, err := teacher.WithEmail(ctx, stdnt.Teacher2, false, debug)
@@ -69,7 +79,7 @@ func setTeacher(dec *json.Decoder, w http.ResponseWriter, r *http.Request) error
 		newFull := newTeacher.Block2.CurSize >= newTeacher.Block2.MaxSize
 
 		if prevOpen && newOpen && !newFull {
-			stdnt.Teacher2 = variables.Teacher
+			stdnt.Teacher2 = newTeacher.Email
 		}
 	}
 
@@ -77,13 +87,10 @@ func setTeacher(dec *json.Decoder, w http.ResponseWriter, r *http.Request) error
 	return err
 }
 
-func getCurrentStudentBlocks(dec *json.Decoder, w http.ResponseWriter, r *http.Request) error {
+func getCurrentStudentBlocks(w http.ResponseWriter, r *http.Request) error {
 	ctx := appengine.NewContext(r)
 	debug := r.Form.Get("debug") == "true"
-	var current bool
-	if err := dec.Decode(&current); err != nil {
-		return errors.New(err.Error())
-	}
+	current:= r.Form.Get("current") == "true"
 
 	stdnt, err := student.Current(ctx, current, debug)
 	if err != nil {
@@ -107,7 +114,7 @@ func getCurrentStudentBlocks(dec *json.Decoder, w http.ResponseWriter, r *http.R
 	return nil
 }
 
-func newStudent(dec *json.Decoder, w http.ResponseWriter, r *http.Request) error {
+func newStudent(w http.ResponseWriter, r *http.Request) error {
 	ctx := appengine.NewContext(r)
 	debug := r.Form.Get("debug") == "true"
 	curU, err := user.Current(ctx, debug)
@@ -115,17 +122,19 @@ func newStudent(dec *json.Decoder, w http.ResponseWriter, r *http.Request) error
 		return err
 	}
 	if curU.Admin {
+		decoder := json.NewDecoder(r.Body)
 		newS := new(student.Student)
-		if err := dec.Decode(newS); err != nil {
+		if err := decoder.Decode(newS); err != nil {
 			return errors.New(err.Error())
 		}
 		err := newS.New(ctx, debug)
+		studentList = append(studentList, newS)
 		return err
 	}
 	return errors.New(errors.AccessDenied)
 }
 
-func editStudent(dec *json.Decoder, w http.ResponseWriter, r *http.Request) error {
+func editStudent(w http.ResponseWriter, r *http.Request) error {
 	ctx := appengine.NewContext(r)
 	debug := r.Form.Get("debug") == "true"
 	curU, err := user.Current(ctx, debug)
@@ -133,9 +142,15 @@ func editStudent(dec *json.Decoder, w http.ResponseWriter, r *http.Request) erro
 		return err
 	}
 	if curU.Admin {
+		decoder := json.NewDecoder(r.Body)
 		stdnt := new(student.Student)
-		if err := dec.Decode(stdnt); err != nil {
+		if err := decoder.Decode(stdnt); err != nil {
 			return errors.New(err.Error())
+		}
+		for i, j := range studentList {
+			if j.ID == stdnt.ID {
+				studentList[i] = stdnt
+			}
 		}
 		err := stdnt.Edit(ctx)
 		return err
@@ -143,7 +158,7 @@ func editStudent(dec *json.Decoder, w http.ResponseWriter, r *http.Request) erro
 	return errors.New(errors.AccessDenied)
 }
 
-func deleteStudent(dec *json.Decoder, w http.ResponseWriter, r *http.Request) error {
+func deleteStudent(w http.ResponseWriter, r *http.Request) error {
 	ctx := appengine.NewContext(r)
 	debug := r.Form.Get("debug") == "true"
 	curU, err := user.Current(ctx, debug)
@@ -151,11 +166,17 @@ func deleteStudent(dec *json.Decoder, w http.ResponseWriter, r *http.Request) er
 		return err
 	}
 	if curU.Admin {
+		decoder := json.NewDecoder(r.Body)
 		sKey := new(string)
-		if err := dec.Decode(sKey); err != nil {
+		if err := decoder.Decode(sKey); err != nil {
 			return errors.New(err.Error())
 		}
 		stdnt := student.Student{ID: *sKey}
+		for i, j := range studentList {
+			if j.ID == stdnt.ID {
+				studentList[i] = nil
+			}
+		}
 		err = stdnt.Delete(ctx)
 		return err
 	}
@@ -164,13 +185,12 @@ func deleteStudent(dec *json.Decoder, w http.ResponseWriter, r *http.Request) er
 
 var studentList []*student.Student
 
-func getAllStudents(dec *json.Decoder, w http.ResponseWriter, r *http.Request) error {
+func getAllStudents(w http.ResponseWriter, r *http.Request) error {
 	ctx := appengine.NewContext(r)
 	debug := r.Form.Get("debug") == "true"
 	if len(studentList) == 0 {
 		var err error
-		studentList, err = student.All(ctx, false, debug)
-		if err != nil {
+		if studentList, err = student.All(ctx, false, debug); err != nil {
 			return err
 		}
 	}
@@ -185,14 +205,12 @@ func getAllStudents(dec *json.Decoder, w http.ResponseWriter, r *http.Request) e
 	return nil
 }
 
-func studentClassOpen(dec *json.Decoder, w http.ResponseWriter, r *http.Request) error {
+func studentClassOpen(w http.ResponseWriter, r *http.Request) error {
 	ctx := appengine.NewContext(r)
-	var variables struct{StdntID string; Block int}
-	if err := dec.Decode(&variables); err != nil {
-		return errors.New(err.Error())
-	}
+	stdntID := r.Form.Get("id")
+	block, _ := strconv.Atoi(r.Form.Get("Block"))
 	
-	key, err := datastore.DecodeKey(variables.StdntID)
+	key, err := datastore.DecodeKey(stdntID)
 	if err != nil {
 		return errors.New(err.Error())
 	}
@@ -202,7 +220,7 @@ func studentClassOpen(dec *json.Decoder, w http.ResponseWriter, r *http.Request)
 	}
 	
 	open := true
-	if variables.Block == 0 {
+	if block == 0 {
 		Teacher, err := teacher.WithEmail(ctx, stdnt.Teacher1, false, false)
 		
 		if err != nil && err.(errors.Error).Message != teacher.TeacherNotFound {

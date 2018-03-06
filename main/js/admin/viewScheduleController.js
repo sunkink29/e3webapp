@@ -16,7 +16,7 @@ app.controller('viewScheduleController', function($scope, $rootScope, $mdDialog)
       controller.nextClasses = [{name:'Loading'}];
     }
     controller.currentWeek = currentWeek;
-    callMethod("getAllTeachers", currentWeek, controller.showTeachers);
+    getMethod("/teacher/getall", {current: currentWeek}, controller.showTeachers);
   };
   
   controller.showTeachers = function(teachers) {
@@ -32,7 +32,7 @@ app.controller('viewScheduleController', function($scope, $rootScope, $mdDialog)
   
   controller.updateStudents = function(teacher) {
     controller.studentList = [[{name:"Loading"}]];
-    callMethod("getStudentsInClass", teacher.ID, controller.showStudents);
+    getMethod("/admin/getstudentclass", {id: teacher.ID}, controller.showStudents);
   };
   
   controller.showStudents = function(students) {
@@ -54,6 +54,27 @@ app.controller('viewScheduleController', function($scope, $rootScope, $mdDialog)
     $("#viewTeachers").show();
     $("#viewStudentList").hide();
     controller.showBack = false;
+  };
+  
+  $(window).on('hashchange', function() {
+	if (window.location.hash === '#viewSchedule') {
+		controller.showDialog();
+	}
+  });
+  
+  controller.showDialog = function() {
+    $mdDialog.show({
+      contentElement: '#viewSchedule',
+      parent: angular.element(document.body),
+      targetEvent: $rootScope.ev,
+      clickOutsideToClose: true,
+      onRemoving: function() {
+        window.location.hash = "admin";
+      },
+      onShowing: function() {
+      	controller.updateTeachers(false);
+      }
+    });
   };
   
   controller.closeDialog = function() {

@@ -17,9 +17,31 @@ app.controller('removeUserController', function($scope, $rootScope, $mdDialog) {
     };
   };
   
-  controller.removeUser = function(user) {
-    callMethod("deleteUser", controller.selectedUser.ID, null);
+  controller.removeUser = function() {
+    postMethod("/admin/deleteUser", {ID: controller.selectedUser.ID}, null);
     controller.closeDialog();
+  };
+  
+  $(window).on('hashchange', function() {
+	if (window.location.hash === "#removeUser") {
+		controller.showDialog();
+	}
+  });
+  
+  controller.showDialog = function() {
+    $mdDialog.show({
+      contentElement: '#removeUser',
+      parent: angular.element(document.body),
+      targetEvent: $rootScope.ev,
+      clickOutsideToClose: true,
+      onRemoving: function() {
+        controller.resetUser();
+        window.location.hash = "admin";
+      },
+      onShowing: function() {
+      	$rootScope.adminControl.updateUsers();
+      }
+    });
   };
   
   controller.closeDialog = function() {

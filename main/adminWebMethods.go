@@ -18,30 +18,37 @@ import (
 	appUser "google.golang.org/appengine/user"
 )
 
-func addAdminMethods() {
-	addToWebMethods("print", returnInput)
-	addToWebMethods("addFirstUser", addFirstUser)
-	addToWebMethods("newUser", addNewUser)
-	addToWebMethods("editUser", editUser)
-	addToWebMethods("deleteUser", deleteUser)
-	addToWebMethods("getAllUsers", getAllUsers)
-	addToWebMethods("getStudentsInClass", getStudentsInClass)
-	addToWebMethods("importUsers", importUsers)
-	addToWebMethods("getClientID", getClientID)
+func addAdminHandle(url string, handle appHandler) {
+	http.Handle("/api/admin/"+url, handle)
 }
 
-func returnInput(dec *json.Decoder, w http.ResponseWriter, r *http.Request) error {
-	str := r.Form.Get("data")
+func addAdminMethods() {
+	addAdminHandle("print", appHandler(returnInput))
+	addAdminHandle("addfirstuser", appHandler(addFirstUser))
+	addAdminHandle("newuser", appHandler(addNewUser))
+	addAdminHandle("edituser", appHandler(editUser))
+	addAdminHandle("deleteuser", appHandler(deleteUser))
+	addAdminHandle("getallusers", appHandler(getAllUsers))
+	addAdminHandle("getstudentclass", appHandler(getStudentsInClass))
+	addAdminHandle("importusers", appHandler(importUsers))
+}
+
+func returnInput(w http.ResponseWriter, r *http.Request) error {
+	str := r.Form.Get("string")
 	fmt.Fprintln(w, str)
 	return nil
 }
 
-func addFirstUser(dec *json.Decoder, w http.ResponseWriter, r *http.Request) error {
+func addFirstUser(w http.ResponseWriter, r *http.Request) error {
+	if !appengine.IsDevAppServer() {
+		return errors.New(errors.AccessDenied)
+	}
 	ctx := appengine.NewContext(r)
 	debug := r.Form.Get("debug") == "true"
 	if users, _ := user.All(ctx, debug); len(users) <= 0 {
+		decoder := json.NewDecoder(r.Body)
 		usr := new(user.User)
-		if err := dec.Decode(usr); err != nil {
+		if err := decoder.Decode(usr); err != nil {
 			return errors.New(err.Error())
 		}
 		err := usr.New(ctx, debug)
@@ -50,7 +57,7 @@ func addFirstUser(dec *json.Decoder, w http.ResponseWriter, r *http.Request) err
 	return errors.New(errors.AccessDenied)
 }
 
-func addNewUser(dec *json.Decoder, w http.ResponseWriter, r *http.Request) error {
+func addNewUser(w http.ResponseWriter, r *http.Request) error {
 	ctx := appengine.NewContext(r)
 	debug := r.Form.Get("debug") == "true"
 	curU, err := user.Current(ctx, debug)
@@ -58,18 +65,20 @@ func addNewUser(dec *json.Decoder, w http.ResponseWriter, r *http.Request) error
 		return err
 	}
 	if curU.Admin {
+		decoder := json.NewDecoder(r.Body)
 		usr := new(user.User)
-		if err := dec.Decode(usr); err != nil {
+		if err := decoder.Decode(usr); err != nil {
 			return errors.New(err.Error())
 		}
 		err := usr.New(ctx, debug)
+		userList = append(userList, usr)
 		return err
 	}
 	return errors.New("Access Denied")
 
 }
 
-func editUser(dec *json.Decoder, w http.ResponseWriter, r *http.Request) error {
+func editUser(w http.ResponseWriter, r *http.Request) error {
 	ctx := appengine.NewContext(r)
 	debug := r.Form.Get("debug") == "true"
 	curU, err := user.Current(ctx, debug)
@@ -77,9 +86,15 @@ func editUser(dec *json.Decoder, w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 	if curU.Admin {
+		decoder := json.NewDecoder(r.Body)
 		usr := new(user.User)
-		if err := dec.Decode(usr); err != nil {
+		if err := decoder.Decode(usr); err != nil {
 			return errors.New(err.Error())
+		}
+		for i, j := range userList {
+			if j.ID == usr.ID {
+				userList[i] = usr
+			}
 		}
 		err := usr.Edit(ctx)
 		return err
@@ -87,7 +102,7 @@ func editUser(dec *json.Decoder, w http.ResponseWriter, r *http.Request) error {
 	return errors.New("Access Denied")
 }
 
-func deleteUser(dec *json.Decoder, w http.ResponseWriter, r *http.Request) error {
+func deleteUser(w http.ResponseWriter, r *http.Request) error {
 	ctx := appengine.NewContext(r)
 	debug := r.Form.Get("debug") == "true"
 	curU, err := user.Current(ctx, debug)
@@ -95,19 +110,27 @@ func deleteUser(dec *json.Decoder, w http.ResponseWriter, r *http.Request) error
 		return err
 	}
 	if curU.Admin {
+		decoder := json.NewDecoder(r.Body)
 		sKey := new(string)
-		if err := dec.Decode(sKey); err != nil {
+		if err := decoder.Decode(sKey); err != nil {
 			return errors.New(err.Error())
 		}
 		usr := new(user.User)
 		usr.ID = *sKey
+		for i, j := range userList {
+			if j.ID == usr.ID {
+				userList[i] = nil
+			}
+		}
 		err = usr.Delete(ctx)
 		return err
 	}
 	return errors.New(errors.AccessDenied)
 }
 
-func getAllUsers(dec *json.Decoder, w http.ResponseWriter, r *http.Request) error {
+var userList []*user.User
+
+func getAllUsers(w http.ResponseWriter, r *http.Request) error {
 	ctx := appengine.NewContext(r)
 	debug := r.Form.Get("debug") == "true"
 	curU, err := user.Current(ctx, debug)
@@ -115,12 +138,15 @@ func getAllUsers(dec *json.Decoder, w http.ResponseWriter, r *http.Request) erro
 		return err
 	}
 	if curU.Admin {
-		users, err := user.All(ctx, debug)
-		if err != nil {
-			return err
+		
+		if len(userList) == 0 {
+			var err error
+			if userList, err = user.All(ctx, debug); err != nil {
+				return err
+			}
 		}
-
-		jUsers, err := json.Marshal(users)
+		
+		jUsers, err := json.Marshal(userList)
 		if err != nil {
 			return errors.New(err.Error())
 		}
@@ -132,7 +158,7 @@ func getAllUsers(dec *json.Decoder, w http.ResponseWriter, r *http.Request) erro
 	return errors.New(errors.AccessDenied)
 }
 
-func getStudentsInClass(dec *json.Decoder, w http.ResponseWriter, r *http.Request) error {
+func getStudentsInClass(w http.ResponseWriter, r *http.Request) error {
 	ctx := appengine.NewContext(r)
 	debug := r.Form.Get("debug") == "true"
 	curU, err := user.Current(ctx, debug)
@@ -140,15 +166,12 @@ func getStudentsInClass(dec *json.Decoder, w http.ResponseWriter, r *http.Reques
 		return err
 	}
 	if curU.Admin {
-		key := new(string)
-		if err := dec.Decode(key); err != nil {
-			return errors.New(err.Error())
-		}
-		k, err := datastore.DecodeKey(*key)
+		key, err := datastore.DecodeKey(r.Form.Get("id"))
 		if err != nil {
 			return errors.New(err.Error())
 		}
-		tchr, err := teacher.WithKey(ctx, k, debug)
+		
+		tchr, err := teacher.WithKey(ctx, key, debug)
 		if err != nil {
 			return err
 		}
@@ -175,7 +198,7 @@ func getStudentsInClass(dec *json.Decoder, w http.ResponseWriter, r *http.Reques
 	return errors.New(errors.AccessDenied)
 }
 
-func importUsers(dec *json.Decoder, w http.ResponseWriter, r *http.Request) error {
+func importUsers(w http.ResponseWriter, r *http.Request) error {
 	ctx := appengine.NewContext(r)
 	debug := r.Form.Get("debug") == "true"
 	curU, err := user.Current(ctx, debug)
@@ -183,8 +206,9 @@ func importUsers(dec *json.Decoder, w http.ResponseWriter, r *http.Request) erro
 		return err
 	}
 	if curU.Admin {
+		decoder := json.NewDecoder(r.Body)
 		id := ""
-		if err := dec.Decode(&id); err != nil {
+		if err := decoder.Decode(&id); err != nil {
 			return errors.New(err.Error())
 		}
 		
@@ -357,41 +381,26 @@ func importUsers(dec *json.Decoder, w http.ResponseWriter, r *http.Request) erro
 		  			stdnt.Delete(ctx)
 		  		}
 		  	}
+		  	if userList, err = user.All(ctx, debug); err != nil {
+				return err
+			}
+			if studentList, err = student.All(ctx, false, debug); err != nil {
+				return err
+			}
 		} 
 		return nil
 	}
 	return errors.New(errors.AccessDenied)
 }
 
-func getClientID(dec *json.Decoder, w http.ResponseWriter, r *http.Request) error {
-	ctx := appengine.NewContext(r)
-	debug := r.Form.Get("debug") == "true"
-	curU, err := user.Current(ctx, debug)
-	if err != nil {
-		return err
-	}
-	if curU.Admin {
-		cid := user.ClientID()
-		
-		jCid, err := json.Marshal(cid)
-		if err != nil {
-			return errors.New(err.Error())
-		}
-		s := string(jCid[:])
-	
-		fmt.Fprintln(w, s)
-		return nil
-	}
-	return errors.New(errors.AccessDenied)
-}
-
-func setAuthInfo(dec *json.Decoder, w http.ResponseWriter, r *http.Request) error {
+func setAuthInfo(w http.ResponseWriter, r *http.Request) error {
 	ctx := appengine.NewContext(r)
 	usr := appUser.Current(ctx)
 	
 	if usr.Admin {
+		decoder := json.NewDecoder(r.Body)
 		var creds user.Credentials
-		if err := dec.Decode(creds); err != nil {
+		if err := decoder.Decode(creds); err != nil {
 			return errors.New(err.Error())
 		}
 		

@@ -1,10 +1,10 @@
 <div ng-controller="adminMainViewController as controller" layout-padding>
   <md-content>
     <h1 flex>Admin Control Panel</h1>
-    <md-button flex="50" class="" ng-click="controller.showAddDialog($event)">Add User</md-button>
-    <md-button flex="50" class="" ng-click="controller.showEditDialog($event)">Edit User permissions</md-button>
-    <md-button flex="50" class="" ng-click="controller.showRemoveDialog($event)">Remove User</md-button>
-    <md-button flex="50" class="" ng-click="controller.showScheduleDialog($event)">View Schedule</md-button>
-    <md-button flex="50" class="" id="auth" disabled>Import Users</md-button>
+    <md-button flex="50" class="" onclick="location.hash='#addUser'" ng-click="controller.rootScope.ev = $event">Add User</md-button>
+    <md-button flex="50" class="" onclick="location.hash='#editUser'" ng-click="controller.rootScope.ev = $event">Edit User permissions</md-button>
+    <md-button flex="50" class="" onclick="location.hash='#removeUser'" ng-click="controller.rootScope.ev = $event">Remove User</md-button>
+    <md-button flex="50" class="" onclick="location.hash='#viewSchedule'" ng-click="controller.rootScope.ev = $event">View Schedule</md-button>
+    <md-button flex="50" class="" id="auth" onclick="importOnClick()">Import Users</md-button>
   </md-content>
 </div>

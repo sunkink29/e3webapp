@@ -1,5 +1,4 @@
 <div ng-controller="mainViewController as controller">
-  <h1  layout-padding flex>Classes</h1>
   <div>
     <h2 layout-padding flex>Current Week</h2>
     <div layout="row" layout-padding>
@@ -21,7 +20,7 @@
         <div style="transform: translateY(25%)" flex>{{ class.Blocks1.Subject }}</div>
         <div style="transform: translateY(25%)" flex>{{ class.Blocks1.Description }}</div>
         <div style="transform: translateY(25%)" flex>{{ class.Blocks1.CurSize+' / ' + class.Block1.MaxSize }}</div>
-        <md-button  ng-disabled="true" ng-click="controller.showChangeDialog(ev,class.curBlock)" >Change Class</md-button>
+        <md-button  ng-disabled="true" >Change Class</md-button>
       </div>
     </div>
   </div>
@@ -46,7 +45,7 @@
         <div style="transform: translateY(25%)" flex>{{ class.Block1.Subject }}</div>
         <div style="transform: translateY(25%)" flex>{{ class.Block1.Description }}</div>
         <div style="transform: translateY(25%)" flex>{{ class.Block1.CurSize+' / ' + class.Block1.MaxSize }}</div>
-        <md-button  ng-disabled="!class.Block1.BlockOpen" ng-click="controller.showChangeDialog(ev,class.curBlock)" >Change Class</md-button>
+        <md-button  ng-disabled="!class.Block1.BlockOpen" ng-click="controller.openDialog($event, $index)" >Change Class</md-button>
       </div>
     </div>
   </div>

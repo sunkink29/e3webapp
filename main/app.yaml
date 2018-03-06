@@ -7,15 +7,15 @@ handlers:
 
 - url: /js
   static_dir: js
+  
+- url: /auth
+  script: _go_app
+
+- url: /worker/.*
+  script: _go_app
+  login: admin
 
 - url: /.*
   script: _go_app
   login: required
   auth_fail_action: redirect
-  
-- url: /auth
-  script: _go_app
-  
-- url: /usrswitch
-  script: _go_app
-  login: admin

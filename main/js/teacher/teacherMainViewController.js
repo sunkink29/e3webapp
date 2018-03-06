@@ -1,18 +1,18 @@
 app.controller('teacherMainViewController', function($scope, $rootScope, $timeout, $mdDialog, $mdToast) {
   var controller = this;
   $rootScope.mainView = controller;
-  controller.NextStudents = [[{ID:-1,name:'loading'},{ID:-1,name:''}]];
-  controller.currentStudents = [[{ID:-1,name:'loading'},{ID:-1,name:''}]];
+  controller.NextStudents = [[],[]];
+  controller.currentStudents = [[],[]];
   controller.rootScope = $rootScope;
   
   controller.updateStudents = function (currentWeek) {
     if (currentWeek) {
-      controller.currentStudents = [[{id:-1,name:'loading'},{id:-1,name:''}]];
+      controller.currentStudents = [[],[]];
     } else {
-      controller.NextStudents = [[{id:-1,name:'loading'},{id:-1,name:''}]];
+      controller.NextStudents = [[],[]];
     }
     controller.currentWeek = currentWeek;
-    callMethod("getCurrentStudents", currentWeek, controller.showStudents);
+    getMethod("/teacher/getstudents", {current: currentWeek}, controller.showStudents);
   };
   
   controller.showStudents = function(students) {
@@ -25,39 +25,14 @@ app.controller('teacherMainViewController', function($scope, $rootScope, $timeou
     $scope.$apply();
   };
   
-  controller.showAssignDialog = function(ev,block) {
-    controller.setBlock(block);
-    $mdDialog.show({
-      contentElement: '#assign',
-      parent: angular.element(document.body),
-      targetEvent: ev,
-      clickOutsideToClose: true,
-      onRemoving: function() {
-        $rootScope.assign.onClose();
-      },
-    });
-  };
-  
-  controller.showEditDialog = function(ev,block) {
-    controller.setBlock(block);
-    $mdDialog.show({
-      contentElement: '#edit',
-      parent: angular.element(document.body),
-      targetEvent: ev,
-      clickOutsideToClose: true,
-      onRemoving: function() {
-        $rootScope.edit.onClose();
-      }
-    });
-  };
-  
-  controller.setBlock = function (block) {
-    $rootScope.block = block;      
+  controller.openDialog = function(ev, hash, block) {
+  	controller.rootScope.ev = ev; 
+  	window.location.hash = hash+block;
   };
   
   controller.removeStudent = function(index, block){
     var studentId = controller.NextStudents[block][index].ID;
-    callMethod("removeFromClass", {Key: studentId, Block: block}, controller.showStudents);
+    postMethod("/teacher/removestudent", {Key: studentId, Block: block}, controller.showStudents);
     var list = controller.NextStudents;
     list[block].splice(index, 1);
   };

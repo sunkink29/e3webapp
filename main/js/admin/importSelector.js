@@ -7,27 +7,15 @@ var spreadSheetID = "empty";
 
 // Use the API Loader script to load google.picker and gapi.auth.
 function onApiLoad() {
-  gapi.load('auth2', onAuthApiLoad);
+  gapi.load('auth2');
   gapi.load('picker', onPickerApiLoad);
 }
 
-function getClientId() {
-	callMethod("getClientID", null, setClientId);
-}
-
-function setClientId(id) {
-	clientId = id;
-}
-
-function onAuthApiLoad() {
-  var authBtn = document.getElementById('auth');
-  authBtn.disabled = false;
-  authBtn.addEventListener('click', function() {
-    gapi.auth2.authorize({
-      client_id: clientId,
-      scope: scope
-    }, handleAuthResult);
-  });
+function importOnClick() {
+  gapi.auth2.authorize({
+    client_id: clientId,
+    scope: scope
+  }, handleAuthResult);
 }
 
 function onPickerApiLoad() {
@@ -48,9 +36,9 @@ function createPicker() {
     var picker = new google.picker.PickerBuilder().
         addView(google.picker.ViewId.SPREADSHEETS).
         setOAuthToken(oauthToken).
-//        setDeveloperKey(developerKey).
+        setDeveloperKey(developerKey).
         setCallback(pickerCallback).
-//        setRelayUrl("https://e3selectionapp.appspot.com/js/admin/rpc_relay.html").
+        setRelayUrl("https://e3selectionapp.appspot.com/js/admin/rpc_relay.html").
         build();
     picker.setVisible(true);
   }
@@ -61,7 +49,7 @@ function pickerCallback(data) {
   if (data[google.picker.Response.ACTION] == google.picker.Action.PICKED) {
     var doc = data[google.picker.Response.DOCUMENTS][0];
     spreadSheetID = doc[google.picker.Document.ID];
-    callMethod("importUsers", spreadSheetID, redirect);
+    postMethod("/admin/importUsers", spreadSheetID, redirect);
   }
 }
 
@@ -73,5 +61,5 @@ function redirect(data) {
 }
 
 function finishImport() {
-	callMethod("importUsers", spreadSheetID);
+	postMethod("/admin/importUsers", spreadSheetID);
 }
