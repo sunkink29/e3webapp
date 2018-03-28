@@ -19,7 +19,7 @@
         <div layout="row">
           <div layout='column' ng-repeat="column in controller.NextStudents" ng-init="outerIndex = $index" flex>
             <div flex="50" layout="row">
-              <md-button flex="50" ng-disabled="controller.rootScope.edit.addButton{{outerIndex}}" ng-click="controller.openDialog($event, '#assign',outerIndex)">Add Student</md-button>
+              <md-button flex="50" ng-disabled="controller.rootScope.edit.currentBlockInfo[{{outerIndex}}].MaxSize <= controller.NextStudents[{{outerIndex}}].length" ng-click="controller.openDialog($event, '#assign',outerIndex)">Add Student</md-button>
               <md-button flex="50" ng-click="controller.openDialog($event, '#editBlock',outerIndex)">Edit Class</md-button>
             </div>
           </div>
