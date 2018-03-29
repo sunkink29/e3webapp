@@ -94,7 +94,7 @@ func getAllTeachers(w http.ResponseWriter, r *http.Request) error {
 	ctx := appengine.NewContext(r)
 	debug := r.Form.Get("debug") == "true"
 	current, _ := strconv.ParseBool(r.Form.Get("current"))
-	
+
 	teachers, err := teacher.All(ctx, current, debug)
 	if err != nil {
 		return err
@@ -119,16 +119,16 @@ func getCurrentStudents(w http.ResponseWriter, r *http.Request) error {
 	}
 	if curU.Teacher {
 		current, _ := strconv.ParseBool(r.Form.Get("current"))
-		
+
 		tchr := teacher.Teacher{Email: curU.Email, Current: current}
-		
+
 		var block1 []*student.Student
 		var block2 []*student.Student
 		block1, err = tchr.StudentList(ctx, 0, debug)
 		if err != nil && err.(errors.Error).Message != student.StudentNotFound {
 			return err
 		}
-		
+
 		block2, err = tchr.StudentList(ctx, 1, debug)
 		if err != nil && err.(errors.Error).Message != student.StudentNotFound {
 			return err
@@ -259,9 +259,8 @@ func addStudentToClass(w http.ResponseWriter, r *http.Request) error {
 			} else {
 				if !prevOpen {
 					return errors.New("Current student class closed")
-				} else {
-					return errors.New("Current class full")
 				}
+				return errors.New("Current class full")
 			}
 		} else {
 			prevTeacher, err := teacher.WithEmail(ctx, stdnt.Teacher2, false, debug)

@@ -49,7 +49,7 @@ function pickerCallback(data) {
   if (data[google.picker.Response.ACTION] == google.picker.Action.PICKED) {
     var doc = data[google.picker.Response.DOCUMENTS][0];
     spreadSheetID = doc[google.picker.Document.ID];
-    postMethod("/admin/importUsers", spreadSheetID, redirect);
+    postMethod("/admin/importusers", spreadSheetID, redirect);
   }
 }
 
@@ -61,5 +61,5 @@ function redirect(data) {
 }
 
 function finishImport() {
-	postMethod("/admin/importUsers", spreadSheetID);
+	postMethod("/admin/importusers", spreadSheetID);
 }

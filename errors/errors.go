@@ -3,9 +3,11 @@ package errors
 import (
 	"runtime/debug"
 
+	"google.golang.org/appengine"
+
 	"golang.org/x/net/context"
-	"google.golang.org/appengine/user"
 	"google.golang.org/appengine/log"
+	"google.golang.org/appengine/user"
 )
 
 const AccessDenied = "Access Denied"
@@ -22,25 +24,27 @@ func (this Error) Error() string {
 func (this Error) HttpError(ctx context.Context) string {
 	output := this.Message
 	logging := string(this.Stack[:])
-	log.Errorf(ctx, "%s\n%s", output, logging)
+	if !appengine.IsDevAppServer() {
+		log.Errorf(ctx, "%s\n%s", output, logging)
+	}
 	if user.IsAdmin(ctx) {
-		output += "\n"+logging
-//		if err != nil {
-//			output += "\n" + err.Error()
-//		}
-//		output = sLog
+		output += "\n" + logging
+		//		if err != nil {
+		//			output += "\n" + err.Error()
+		//		}
+		//		output = sLog
 
 	}
 	return output
 }
 
 type Redirect struct {
-	URL string `json:"url"`
-	Code int `json:"code"`
+	URL  string `json:"url"`
+	Code int    `json:"code"`
 }
 
 func (this Redirect) Error() string {
-	return"redirect"
+	return "redirect"
 }
 
 func New(input string) error {

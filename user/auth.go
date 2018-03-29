@@ -1,32 +1,32 @@
 package user
 
 import (
-    "crypto/rand"
-    "encoding/base64"
-    "fmt"
-    "net/http"
+	"crypto/rand"
+	"encoding/base64"
+	"fmt"
+	"net/http"
 
 	"golang.org/x/net/context"
-    "golang.org/x/oauth2"
-    "golang.org/x/oauth2/google"
-    gOauth2 "google.golang.org/api/oauth2/v2"
-    "google.golang.org/appengine"
-    "google.golang.org/appengine/datastore"
-    
-    "github.com/sunkink29/e3webapp/errors"
+	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/google"
+	gOauth2 "google.golang.org/api/oauth2/v2"
+	"google.golang.org/appengine"
+	"google.golang.org/appengine/datastore"
+
+	"github.com/sunkink29/e3webapp/errors"
 )
 
 // Credentials which stores google ids.
 type Credentials struct {
-	APIKey 	string
-    Cid     string `datastore:"ClientID"`
-    Csecret string `datastore:"ClientSecret"`
-    ID		string
-    URL	string `datastore:"RedirectURL"`
+	APIKey  string
+	Cid     string `datastore:"ClientID"`
+	Csecret string `datastore:"ClientSecret"`
+	ID      string
+	URL     string `datastore:"RedirectURL"`
 }
 
 var cred Credentials
-var conf *oauth2.Config
+var Conf *oauth2.Config
 
 func randToken() string {
 	b := make([]byte, 32)
@@ -43,24 +43,24 @@ func ApiKey() string {
 }
 
 func InitAuth(ctx context.Context) error {
-	if conf == nil {
-	    key := datastore.NewKey(ctx, "Auth", "Auth", 0, nil)
-	    err := datastore.Get(ctx, key, &cred)
+	if Conf == nil {
+		key := datastore.NewKey(ctx, "Auth", "Auth", 0, nil)
+		err := datastore.Get(ctx, key, &cred)
 		if err != nil {
 			return errors.New(err.Error())
 		}
-		
-	    conf = &oauth2.Config{
-	        ClientID:     cred.Cid,
-	        ClientSecret: cred.Csecret,
-	        RedirectURL:  cred.URL,
-	        Scopes: []string{
-	            "https://www.googleapis.com/auth/spreadsheets.readonly",
-	        },
-	        Endpoint: google.Endpoint,
-	    }
-    }
-    return nil
+
+		Conf = &oauth2.Config{
+			ClientID:     cred.Cid,
+			ClientSecret: cred.Csecret,
+			RedirectURL:  cred.URL,
+			Scopes: []string{
+				"https://www.googleapis.com/auth/spreadsheets.readonly",
+			},
+			Endpoint: google.Endpoint,
+		}
+	}
+	return nil
 }
 
 func Client(ctx context.Context) (*http.Client, error) {
@@ -72,20 +72,17 @@ func Client(ctx context.Context) (*http.Client, error) {
 		err = requestToken(ctx)
 		return nil, err
 	}
-	
-	client := conf.Client(ctx, usr.Token)
-	if err != nil {
-		return nil, errors.New(err.Error())
-	}
-	
+
+	client := Conf.Client(ctx, usr.Token)
+
 	oauth2Service, err := gOauth2.New(client)
 	tokenInfoCall := oauth2Service.Tokeninfo()
 	tokenInfoCall.AccessToken(usr.Token.AccessToken)
 	_, err = tokenInfoCall.Do()
-    if err != nil {
-        err = requestToken(ctx)
+	if err != nil {
+		err = requestToken(ctx)
 		return nil, err
-    }
+	}
 	return client, nil
 }
 
@@ -100,8 +97,8 @@ func requestToken(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-//	setEmail = oauth2.SetAuthURLParam(key, value string)
-	url := conf.AuthCodeURL(state, oauth2.AccessTypeOffline)
+	//	setEmail = oauth2.SetAuthURLParam(key, value string)
+	url := Conf.AuthCodeURL(state, oauth2.AccessTypeOffline)
 	return errors.Redirect{URL: url, Code: 308}
 }
 
@@ -118,8 +115,8 @@ func AuthHandle(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, fmt.Sprintf("Invalid session state: %s", retrievedState), http.StatusUnauthorized)
 		return
 	}
-	
-	tok, err := conf.Exchange(ctx, r.Form.Get("code"))
+
+	tok, err := Conf.Exchange(ctx, r.Form.Get("code"))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -129,9 +126,9 @@ func AuthHandle(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	}
-	
-//	bToken, err := json.Marshal(tok)
-//	sToken := string(bToken[:])
-	
+
+	//	bToken, err := json.Marshal(tok)
+	//	sToken := string(bToken[:])
+
 	fmt.Fprintln(w, "<script type='text/javascript'> window.opener.finishImport(); window.close() </script>")
 }

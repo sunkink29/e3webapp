@@ -19,8 +19,9 @@ import (
 var funcMap = map[string]interface{}{
 	"includeHTML": includeHTML,
 	"include":     include,
-	"clientID": user.ClientID,
-	"apiKey": user.ApiKey}
+	"clientID":    user.ClientID,
+	"apiKey":      user.ApiKey,
+	"isDevServer": isDevServer,}
 var indexTemplate = template.Must(template.New("index").Funcs(funcMap).ParseFiles("html/index.html"))
 var fileMux sync.Mutex
 
@@ -35,6 +36,10 @@ func include(filename string) (string, error) {
 	return s, nil
 }
 
+func isDevServer() bool {
+	return appengine.IsDevAppServer()
+}
+
 func includeHTML(filename string) (template.HTML, error) {
 	text, err := include(filename)
 	return template.HTML(text), err
@@ -47,10 +52,10 @@ func (fn appHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	k := datastore.NewKey(ctx, "lock", "lock", 0, nil)
 	lock := new(struct{ lock bool })
 	err := datastore.Get(ctx, k, lock)
-	if err != nil {
+	if true || err != nil {
 		r.ParseForm()
 		if err := fn(w, r); err != nil {
-		    http.Error(w, err.(errors.Error).HttpError(ctx), 500)
+			http.Error(w, err.(errors.Error).HttpError(ctx), 500)
 		}
 	} else {
 		http.Error(w, "Database is locked currently\n check back in 5 minutes", 500)
@@ -62,14 +67,15 @@ func main() {
 }
 
 func init() {
-//	validMethods = make(map[string]webMethod)
+	//	validMethods = make(map[string]webMethod)
 	addAdminMethods()
 	addTeacherMethods()
 	addStudentMethods()
 
 	http.Handle("/", appHandler(root))
-//	http.HandleFunc("/async", async)
+	//	http.HandleFunc("/async", async)
 	http.Handle("/worker/usrswitch", appHandler(usrswitch))
+	http.Handle("/worker/importusers", appHandler(importUsers))
 	http.HandleFunc("/auth", user.AuthHandle)
 }
 
@@ -82,9 +88,9 @@ func root(w http.ResponseWriter, r *http.Request) error {
 	if err != nil {
 		return err
 	}
-	
+
 	user.InitAuth(ctx)
-	
+
 	err = indexTemplate.ExecuteTemplate(w, "index.html", usr)
 	if err != nil {
 		return errors.New(err.Error())
@@ -127,7 +133,7 @@ func async(w http.ResponseWriter, r *http.Request) {
 func usrswitch(w http.ResponseWriter, r *http.Request) error {
 	ctx := appengine.NewContext(r)
 	debug := false
-	
+
 	lockKey := datastore.NewKey(ctx, "lock", "lock", 0, nil)
 	lock := new(struct{ lock bool })
 	_, err := datastore.Put(ctx, lockKey, lock)
