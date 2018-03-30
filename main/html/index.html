@@ -5,12 +5,49 @@
     <link rel="shortcut icon" href="https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Google_%22G%22_Logo.svg/200px-Google_%22G%22_Logo.svg.png">
     <link rel="stylesheet" href="/css/stylesheet.css">
     <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/angular_material/1.1.6/angular-material.min.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   </head>
-  <body>
+  <body ng-cloak>
   	<md-toolbar>
   		<div class="md-toolbar-tools">
 	  		<h2 flex>E3 Selection App</h2>
-	  		<p>{{.Name}}</p>
+        <p>{{.Name}}</p>
+        {{ if isDevServer }}
+        <div ng-controller="menu as ctrl">
+            <md-menu>
+              <md-button aria-label="Open view selection menu" ng-click="ctrl.openMenu($mdMenu, $event)">
+                <md-icon ng-bind="'menu'"></md-icon>
+              </md-button>
+              <md-menu-content >
+                <md-menu-item>
+                  <md-button ng-click="ctrl.openView(0)">
+                    <md-icon ng-bind="'edit'"></md-icon>
+                    Student View
+                  </md-button>
+                </md-menu-item>
+                <md-menu-item>
+                  <md-button ng-click="ctrl.openView(1)">
+                    <md-icon ng-bind="'class'"></md-icon>
+                    Teacher View
+                  </md-button>
+                </md-menu-item>
+                <md-menu-item>
+                  <md-button ng-click="ctrl.openView(2)">
+                    <md-icon ng-bind="'work'"></md-icon>
+                    Admin View
+                  </md-button>
+                </md-menu-item>
+                <md-menu-item>
+                  <md-button ng-click="ctrl.openView(3)">
+                    <md-icon ng-bind="'work'"></md-icon>
+                    Teacher and Admin View
+                  </md-button>
+                </md-menu-item>
+              </md-menu-content>
+            </md-menu>
+          </div>
+        </div>
+        {{ end }}
 	  	</div>
   	</md-toolbar>
     <div id="main">
@@ -63,30 +100,67 @@
       function postMethod(method, data, callback) {
       	var sData = JSON.stringify(data);
       	$.ajax({
-		  method: "POST",
-		  url: "/api"+method,
-		  data: sData,
-		  contentType: 'text/plain',
-		  dataType: "json",
-		  success: callback
-		})
+          method: "POST",
+          url: "/api"+method,
+          data: sData,
+          contentType: 'text/plain',
+          dataType: "json",
+          success: callback
+        })
       }
       
       function getMethod(method, data, callback) {
       	$.ajax({
-		  type: "GET",
-		  url: "/api"+method,
-		  data: data,
-		  contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
-		  dataType: "json",
-		  success: callback
-		})
+          type: "GET",
+          url: "/api"+method,
+          data: data,
+          contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
+          dataType: "json",
+          success: callback
+        })
       }
       
-	  $(document).ready(function(){
-	  	$(window).trigger('hashchange');
-	  }) 
+      $(document).ready(function(){
+        $(window).trigger('hashchange');
+      }) 
       var app = angular.module('SelectionApp', ['ngMaterial']);
+
+      app.controller('menu', function($mdDialog) {
+        var originatorEv;
+        var ctrl = this;
+
+        ctrl.openMenu = function($mdMenu, ev) {
+          originatorEv = ev;
+          $mdMenu.open(ev);
+        };
+
+        ctrl.openView = function(view) {
+          getMethod("/admin/current", null, function(user) {
+            ctrl.editUser(view, user);
+          });
+        };
+
+        ctrl.editUser = function(view, user) {
+          if (view === 0) { // student
+            user.Teacher = false;
+            user.Admin = false;
+          } else if (view === 1) { // teacher
+            user.Teacher = true;
+            user.Admin = false;
+          } else if (view === 2) { // admin
+            user.Teacher = false;
+            user.Admin = true;
+          } else if (view === 3) { // teacher and admin
+            user.Teacher = true;
+            user.Admin = true;
+          }
+          postMethod("/admin/edituser", user);
+          location.reload(false)
+        };
+        ctrl.reloadPage = function() {
+          window.console.log("test");
+        }
+      });
     </script>
     {{ if .Admin }}
       <script src="/js/admin/adminMainViewController.js"></script>

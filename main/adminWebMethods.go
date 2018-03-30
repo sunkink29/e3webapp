@@ -31,6 +31,7 @@ func addAdminMethods() {
 	addAdminHandle("print", appHandler(returnInput))
 	addAdminHandle("addfirstuser", appHandler(addFirstUser))
 	addAdminHandle("newuser", appHandler(addNewUser))
+	addAdminHandle("current", appHandler(getCurrent))
 	addAdminHandle("edituser", appHandler(editUser))
 	addAdminHandle("deleteuser", appHandler(deleteUser))
 	addAdminHandle("getallusers", appHandler(getAllUsers))
@@ -86,6 +87,24 @@ func addNewUser(w http.ResponseWriter, r *http.Request) error {
 
 }
 
+func getCurrent(w http.ResponseWriter, r *http.Request) error {
+	ctx := appengine.NewContext(r)
+	debug := r.Form.Get("debug") == "true"
+	curU, err := user.Current(ctx, debug)
+	if err != nil {
+		return err
+	}
+
+	jUsers, err := json.Marshal(curU)
+	if err != nil {
+		return errors.New(err.Error())
+	}
+	s := string(jUsers[:])
+
+	fmt.Fprintln(w, s)
+	return nil
+}
+
 func editUser(w http.ResponseWriter, r *http.Request) error {
 	ctx := appengine.NewContext(r)
 	debug := r.Form.Get("debug") == "true"
@@ -93,7 +112,9 @@ func editUser(w http.ResponseWriter, r *http.Request) error {
 	if err != nil {
 		return err
 	}
-	if curU.Admin {
+	usr := appUser.Current(ctx)
+
+	if curU.Admin || usr.Admin {
 		decoder := json.NewDecoder(r.Body)
 		usr := new(user.User)
 		if err := decoder.Decode(usr); err != nil {
