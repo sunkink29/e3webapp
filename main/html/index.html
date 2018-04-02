@@ -85,6 +85,7 @@
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.5/angular-animate.min.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.5/angular-aria.min.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.5/angular-messages.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.5/angular-sanitize.js"></script>
 
     <!-- Angular Material Library -->
     <script src="https://ajax.googleapis.com/ajax/libs/angular_material/1.1.6/angular-material.min.js"></script>
@@ -123,7 +124,7 @@
       $(document).ready(function(){
         $(window).trigger('hashchange');
       }) 
-      var app = angular.module('SelectionApp', ['ngMaterial']);
+      var app = angular.module('SelectionApp', ['ngMaterial', 'ngSanitize']);
 
       app.controller('menu', function($mdDialog) {
         var originatorEv;
@@ -171,6 +172,7 @@
       {{ includeHTML "html/admin/editUser.html" }}
       {{ includeHTML "html/admin/removeUser.html" }}
       {{ includeHTML "html/admin/viewSchedule.html" }}
+      {{ includeHTML "html/admin/importOption.html" }}
     {{ end }}
     {{ if .Teacher }}
       <script src="/js/teacher/teacherMainViewController.js"></script>

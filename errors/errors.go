@@ -24,7 +24,7 @@ func (this Error) Error() string {
 func (this Error) HttpError(ctx context.Context) string {
 	output := this.Message
 	logging := string(this.Stack[:])
-	if !appengine.IsDevAppServer() {
+	if true || !appengine.IsDevAppServer() {
 		log.Errorf(ctx, "%s\n%s", output, logging)
 	}
 	if user.IsAdmin(ctx) {

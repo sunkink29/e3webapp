@@ -1,6 +1,7 @@
 package main
 
 import (
+	// "bytes"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -37,6 +38,7 @@ func addAdminMethods() {
 	addAdminHandle("getallusers", appHandler(getAllUsers))
 	addAdminHandle("getstudentclass", appHandler(getStudentsInClass))
 	addAdminHandle("importusers", appHandler(startImport))
+	addAdminHandle("getimportprogress", appHandler(getImportProgress))
 	addAdminHandle("setauthinfo", appHandler(setAuthInfo))
 }
 
@@ -227,6 +229,11 @@ func getStudentsInClass(w http.ResponseWriter, r *http.Request) error {
 	return errors.New(errors.AccessDenied)
 }
 
+type progressType struct {
+	Completed int
+	Total     int
+}
+
 func startImport(w http.ResponseWriter, r *http.Request) error {
 	ctx := appengine.NewContext(r)
 	debug := r.Form.Get("debug") == "true"
@@ -236,19 +243,33 @@ func startImport(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	if curU.Admin {
+
 		decoder := json.NewDecoder(r.Body)
-		id := ""
-		if err := decoder.Decode(&id); err != nil {
+		input := new(struct {
+			ID      string
+			Options struct {
+				TabName     string
+				HeaderNames struct {
+					Name    string
+					Email   string
+					Teacher string
+					Admin   string
+					Grade   string
+				}
+			}
+		})
+
+		if err := decoder.Decode(&input); err != nil {
 			return errors.New(err.Error())
 		}
 
 		_, err := user.Client(ctx)
 		if err != nil && err.Error() == "redirect" {
-			jUrl, err := json.Marshal(err.(errors.Redirect))
+			jURL, err := json.Marshal(err.(errors.Redirect))
 			if err != nil {
 				return errors.New(err.Error())
 			}
-			s := string(jUrl[:])
+			s := string(jURL[:])
 
 			fmt.Fprintln(w, s)
 			return nil
@@ -263,18 +284,30 @@ func startImport(w http.ResponseWriter, r *http.Request) error {
 		sToken := string(bToken[:])
 
 		t := taskqueue.NewPOSTTask("/worker/importusers", url.Values{
-			"ID":    {id},
-			"token": {sToken},
+			"ID":            {input.ID},
+			"token":         {sToken},
+			"tabName":       {input.Options.TabName},
+			"nameHeader":    {input.Options.HeaderNames.Name},
+			"emailHeader":   {input.Options.HeaderNames.Email},
+			"teacherHeader": {input.Options.HeaderNames.Teacher},
+			"adminHeader":   {input.Options.HeaderNames.Admin},
+			"gradeHeader":   {input.Options.HeaderNames.Grade},
 		})
 		_, err = taskqueue.Add(ctx, t, "")
 		if err != nil {
 			return errors.New(err.Error())
 		}
 
+		k := datastore.NewKey(ctx, "progress", "progress", 0, nil)
+		progress := progressType{0, 1}
+		datastore.Put(ctx, k, &progress)
+
 		return nil
 	}
 	return errors.New(errors.AccessDenied)
 }
+
+var completed, total = 0, 1
 
 func importUsers(w http.ResponseWriter, r *http.Request) error {
 	ctx := appengine.NewContext(r)
@@ -307,18 +340,26 @@ func importUsers(w http.ResponseWriter, r *http.Request) error {
 
 	srv, err := sheets.New(client)
 	if err != nil {
-		return errors.New(fmt.Sprintf("Unable to retrieve Sheets Client %v", err))
+		return errors.New(fmt.Sprintf("Unable to retrieve Sheets Client %v", err.Error()))
 	}
 
-	readRange := "user data!A:Z"
+	tabName := r.Form.Get("tabName")
+	readRange := tabName + "!A:Z"
 	resp, err := srv.Spreadsheets.Values.Get(id, readRange).Do()
 	if err != nil {
-		return errors.New(fmt.Sprintf("Unable to retrieve data from sheet. %v", err))
+		return errors.New(fmt.Sprintf("Unable to retrieve data from sheet. %v", err.Error()))
 	}
+
+	total = 3
+
 	if len(resp.Values) > 0 {
 		cells := resp.Values
 		var email, name, teacher, admin, grade = -1, -1, -1, -1, -1
-		var sEmail, sName, sTeacher, sAdmin, sGrade = "email", "name", "teacher", "admin", "grade"
+		var sEmail, sName, sTeacher, sAdmin, sGrade = r.Form.Get("emailHeader"),
+			r.Form.Get("nameHeader"),
+			r.Form.Get("teacherHeader"),
+			r.Form.Get("adminHeader"),
+			r.Form.Get("gradeHeader")
 		var fields = map[string]*int{
 			sEmail:   &email,
 			sName:    &name,
@@ -329,7 +370,7 @@ func importUsers(w http.ResponseWriter, r *http.Request) error {
 		output := ""
 		for index, column := range cells[0] {
 			for key, value := range fields {
-				if strings.ToLower(column.(string)) == key {
+				if column.(string) == key {
 					*value = index
 					output += fmt.Sprint(key, ":", *value, " ")
 				}
@@ -347,21 +388,26 @@ func importUsers(w http.ResponseWriter, r *http.Request) error {
 			return errors.New(fmt.Sprintf("Unable to find %v Fields in sheet", missing))
 		}
 
-		var numRoutines = 20
+		completed = 1
+		// k := datastore.NewKey(ctx, "progress", "progress", 0, nil)
+		// progress := progressType{1, 3}
+		// datastore.Put(ctx, k, &progress)
 
-		var divided [][][]interface{}
+		// var numRoutines = 20
 
-		chunkSize := (len(cells) + numRoutines - 1) / numRoutines
+		// var divided [][][]interface{}
 
-		for i := 0; i < len(cells); i += chunkSize {
-			end := i + chunkSize
+		// chunkSize := (len(cells) + numRoutines - 1) / numRoutines
 
-			if end > len(cells) {
-				end = len(cells)
-			}
+		// for i := 0; i < len(cells); i += chunkSize {
+		// 	end := i + chunkSize
 
-			divided = append(divided, cells[i:end])
-		}
+		// 	if end > len(cells) {
+		// 		end = len(cells)
+		// 	}
+
+		// 	divided = append(divided, cells[i:end])
+		// }
 
 		//			var sum int
 		//			for _, block := range divided {
@@ -392,6 +438,11 @@ func importUsers(w http.ResponseWriter, r *http.Request) error {
 			stdntMap[stdnt.Email] = stdnt
 		}
 
+		completed = 2
+
+		// progress = progressType{2, 3}
+		// datastore.Put(ctx, k, &progress)
+
 		// c := make(chan map[string]*user.User)
 		// for i := 0; i < numRoutines; i++ {
 		// 	go func(cells [][]interface{}, c chan map[string]*user.User) {
@@ -411,10 +462,12 @@ func importUsers(w http.ResponseWriter, r *http.Request) error {
 		// 	}
 		// }
 
+		// var updateNum int = len(cells) / 10
+		total = len(cells)
+
 		newUsers := make(map[string]*user.User)
-		for _, row := range cells {
+		for i, row := range cells {
 			if row[name] != "" && row[email] != "" && strings.ToLower(row[name].(string)) != strings.ToLower(sName) {
-				fmt.Fprintln(w, fmt.Sprint(row))
 				usr := new(user.User)
 				usr.Email = row[email].(string)
 				usr.Name = row[name].(string)
@@ -449,6 +502,11 @@ func importUsers(w http.ResponseWriter, r *http.Request) error {
 				}
 				newUsers[usr.Email] = usr
 			}
+			// if i%updateNum == 0 {
+			// 	// progress = progressType{i, len(cells)}
+			// 	// datastore.Put(ctx, k, &progress)
+			// }
+			completed = i + 1
 		}
 
 		for _, usr := range users {
@@ -469,6 +527,29 @@ func importUsers(w http.ResponseWriter, r *http.Request) error {
 			return err
 		}
 	}
+	return nil
+}
+
+func getImportProgress(w http.ResponseWriter, r *http.Request) error {
+	ctx := appengine.NewContext(r)
+	k := datastore.NewKey(ctx, "progress", "progress", 0, nil)
+	progress := new(struct {
+		Completed int
+		Total     int
+	})
+	progress.Completed = 0
+	progress.Total = 1
+	datastore.Get(ctx, k, progress)
+	progress.Completed = completed
+	progress.Total = total
+
+	jData, err := json.Marshal(*progress)
+	if err != nil {
+		return errors.New(err.Error())
+	}
+	s := string(jData[:])
+
+	fmt.Fprintln(w, s)
 	return nil
 }
 

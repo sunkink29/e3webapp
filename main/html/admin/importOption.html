@@ -1,0 +1,52 @@
+<div style="visibility: hidden" ng-controller="importOptionController as ctrl">
+    <div id='importOptions' class='md-dialog-container' >
+      <md-dialog layout-padding>
+        <form name="optionsForm" ng-submit="optionsForm.$valid && ctrl.submitOptions()" novalidate>
+          <md-dialog-content>
+            <h3>User Import Options</h3>
+            <md-input-container>
+              <label>Tab Name</label>
+              <input ng-model='ctrl.options.tabName' type="text" required>
+            </md-input-container>
+            <h4>Header Names</h4>
+            <md-input-container>
+                <label>Name</label>
+                <input ng-model='ctrl.options.headerNames.name' type="text" required>
+            </md-input-container>
+            <md-input-container>
+                <label>Email</label>
+                <input ng-model='ctrl.options.headerNames.email' type="text" required>
+            </md-input-container>
+            <md-input-container>
+                <label>Is Teacher</label>
+                <input ng-model='ctrl.options.headerNames.teacher' type="text" required>
+            </md-input-container>
+            <md-input-container>
+                <label>Is Admin</label>
+                <input ng-model='ctrl.options.headerNames.admin' type="text" required>
+            </md-input-container>
+            <md-input-container>
+                <label>Grade</label>
+                <input ng-model='ctrl.options.headerNames.grade' type="text" required>
+            </md-input-container>
+          </md-dialog-content>
+          <md-dialog-actions>
+            <md-button ng-click="ctrl.closeDialog()">Cancel</md-button>
+            <md-button type="submit">Import Users</md-button>
+          </md-dialog-actions>
+        </form>
+      </md-dialog>
+    </div>
+    <div id='importProgress' class='md-dialog-container' >
+      <md-dialog layout-padding>
+          <md-dialog-content>
+            <h3>User Import Options</h3>
+            <md-progress-linear md-mode="determinate" ng-value="ctrl.completed / ctrl.total * 100"></md-progress-linear>
+          </md-dialog-content>
+          <md-dialog-actions>
+            <md-button ng-click="ctrl.closeDialog()">Close</md-button>
+          </md-dialog-actions>
+      </md-dialog>
+    </div>
+  </div>
+  <script src="/js/admin/importOptionController.js"></script>
