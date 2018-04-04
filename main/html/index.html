@@ -3,11 +3,13 @@
   <head>
     <base target="_top">
     <link rel="shortcut icon" href="https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Google_%22G%22_Logo.svg/200px-Google_%22G%22_Logo.svg.png">
+    <link rel="manifest" href="/js/manifest.json">
     <link rel="stylesheet" href="/css/stylesheet.css">
     <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/angular_material/1.1.6/angular-material.min.css">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   </head>
   <body ng-cloak>
+    <div ng-controller="messaging"></div>
   	<md-toolbar>
   		<div class="md-toolbar-tools">
 	  		<h2 flex>E3 Selection App</h2>
@@ -89,8 +91,25 @@
 
     <!-- Angular Material Library -->
     <script src="https://ajax.googleapis.com/ajax/libs/angular_material/1.1.6/angular-material.min.js"></script>
+
+    <script src="https://www.gstatic.com/firebasejs/4.12.0/firebase.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/4.12.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/4.12.0/firebase-messaging.js"></script>
     <script>
-      /*eslint-disable no-unused-params, no-unused-vars*/
+      // Initialize Firebase
+
+      var config = {
+        apiKey: {{ firebaseApiKey }},
+        authDomain: "{{ projectID }}.firebaseapp.com",
+        databaseURL: "https://{{ projectID }}.firebaseio.com",
+        projectId: {{ projectID }},
+        storageBucket: "{{ projectID }}.appspot.com",
+        messagingSenderId: {{ senderID }}
+      };
+      firebase.initializeApp(config);
+
+      var firebaseKey = {{ firebaseKey }};
+
       var curPage = 'main';
       function showPage(page) {
         $("#"+curPage).hide();
@@ -163,6 +182,7 @@
         }
       });
     </script>
+    <script src="/js/messaging.js"></script>
     {{ if .Admin }}
       <script src="/js/admin/adminMainViewController.js"></script>
       <script >var clientId = {{ clientID }}; var developerKey = {{ apiKey }}</script>
@@ -173,6 +193,8 @@
       {{ includeHTML "html/admin/removeUser.html" }}
       {{ includeHTML "html/admin/viewSchedule.html" }}
       {{ includeHTML "html/admin/importOption.html" }}
+      <md-button flex="50" onclick="postMethod('/admin/sendmessage','student')">test student messaging </md-button>
+      <md-button flex="50"onclick="postMethod('/admin/sendmessage','admin')">test admin messaging</md-button>
     {{ end }}
     {{ if .Teacher }}
       <script src="/js/teacher/teacherMainViewController.js"></script>

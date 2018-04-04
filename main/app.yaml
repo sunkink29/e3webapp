@@ -7,6 +7,10 @@ handlers:
 
 - url: /js
   static_dir: js
+
+- url: /(.*\.(js))$
+  static_files: js/\1
+  upload: /.*\.(gif|png|jpg)$
   
 - url: /auth
   script: _go_app

@@ -1,0 +1,6 @@
+{
+    "short_name": "E3 App",
+    "name": "E3 Selection",
+    "start_url": "/?launcher=true",
+    "gcm_sender_id": "103953800507"
+  }

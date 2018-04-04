@@ -8,6 +8,7 @@ import (
 	"sync"
 
 	"github.com/sunkink29/e3webapp/errors"
+	"github.com/sunkink29/e3webapp/messaging"
 	"github.com/sunkink29/e3webapp/student"
 	"github.com/sunkink29/e3webapp/teacher"
 	"github.com/sunkink29/e3webapp/user"
@@ -17,11 +18,15 @@ import (
 )
 
 var funcMap = map[string]interface{}{
-	"includeHTML": includeHTML,
-	"include":     include,
-	"clientID":    user.ClientID,
-	"apiKey":      user.ApiKey,
-	"isDevServer": isDevServer,}
+	"includeHTML":    includeHTML,
+	"include":        include,
+	"clientID":       user.ClientID,
+	"apiKey":         user.ApiKey,
+	"isDevServer":    isDevServer,
+	"firebaseKey":    messaging.FirebaseKey,
+	"projectID":      messaging.ID,
+	"firebaseApiKey": messaging.APIKey,
+	"senderID":       messaging.SenderID}
 var indexTemplate = template.Must(template.New("index").Funcs(funcMap).ParseFiles("html/index.html"))
 var fileMux sync.Mutex
 
@@ -49,6 +54,8 @@ type appHandler func(http.ResponseWriter, *http.Request) error
 
 func (fn appHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	ctx := appengine.NewContext(r)
+	user.InitAuth(ctx)
+	messaging.InitAuth(ctx)
 	k := datastore.NewKey(ctx, "lock", "lock", 0, nil)
 	lock := new(struct{ lock bool })
 	err := datastore.Get(ctx, k, lock)
@@ -73,6 +80,7 @@ func init() {
 	addStudentMethods()
 
 	http.Handle("/", appHandler(root))
+	http.Handle("/api/registertoken", appHandler(messaging.RegisterTopicHandler))
 	//	http.HandleFunc("/async", async)
 	http.Handle("/worker/usrswitch", appHandler(usrswitch))
 	http.Handle("/worker/importusers", appHandler(importUsers))
@@ -88,8 +96,6 @@ func root(w http.ResponseWriter, r *http.Request) error {
 	if err != nil {
 		return err
 	}
-
-	user.InitAuth(ctx)
 
 	err = indexTemplate.ExecuteTemplate(w, "index.html", usr)
 	if err != nil {
@@ -185,7 +191,7 @@ func usrswitch(w http.ResponseWriter, r *http.Request) error {
 		if err != nil {
 			return err
 		}
-		newS := student.Student{Name: stdnt.Name, Email: stdnt.Email}
+		newS := student.Student{Name: stdnt.Name, Email: stdnt.Email, Grade: stdnt.Grade}
 		err = newS.New(ctx, debug)
 		if err != nil {
 			return err

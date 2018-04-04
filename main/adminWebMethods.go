@@ -12,6 +12,7 @@ import (
 	"golang.org/x/oauth2"
 
 	"github.com/sunkink29/e3webapp/errors"
+	"github.com/sunkink29/e3webapp/messaging"
 	"github.com/sunkink29/e3webapp/student"
 	"github.com/sunkink29/e3webapp/teacher"
 	"github.com/sunkink29/e3webapp/user"
@@ -40,6 +41,8 @@ func addAdminMethods() {
 	addAdminHandle("importusers", appHandler(startImport))
 	addAdminHandle("getimportprogress", appHandler(getImportProgress))
 	addAdminHandle("setauthinfo", appHandler(setAuthInfo))
+	addAdminHandle("setfirebaseauthinfo", appHandler(setFirebaseAuthInfo))
+	addAdminHandle("sendmessage", appHandler(sendMessage))
 }
 
 func returnInput(w http.ResponseWriter, r *http.Request) error {
@@ -573,4 +576,51 @@ func setAuthInfo(w http.ResponseWriter, r *http.Request) error {
 		return nil
 	}
 	return errors.New(errors.AccessDenied)
+}
+
+func setFirebaseAuthInfo(w http.ResponseWriter, r *http.Request) error {
+	ctx := appengine.NewContext(r)
+
+	if appengine.IsDevAppServer() {
+		var creds messaging.Credentials
+
+		cByte := []byte(r.Form.Get("auth"))
+		err := json.Unmarshal(cByte, &creds)
+		if err != nil {
+			return errors.New(err.Error())
+		}
+
+		key := datastore.NewKey(ctx, "Auth", "firebase", 0, nil)
+		_, err = datastore.Put(ctx, key, &creds)
+		if err != nil {
+			return errors.New(err.Error())
+		}
+		return nil
+	}
+	return errors.New(errors.AccessDenied)
+}
+
+func sendMessage(w http.ResponseWriter, r *http.Request) error {
+	ctx := appengine.NewContext(r)
+	debug := r.Form.Get("debug") == "true"
+	curU, err := user.Current(ctx, debug)
+	if err != nil {
+		return err
+	}
+	if curU.Admin {
+		decoder := json.NewDecoder(r.Body)
+		sGroup := new(string)
+		if err := decoder.Decode(sGroup); err != nil {
+			return errors.New(err.Error())
+		}
+		if *sGroup == "student" {
+			err = messaging.SendEvent(ctx, "popup", "{\"title\": \"test\", \"message\": \"test Popup\"}", messaging.Topics.Student)
+		} else if *sGroup == "teacher" {
+			err = messaging.SendEvent(ctx, "popup", "{\"title\": \"test\", \"message\": \"test Popup\"}", messaging.Topics.Teacher)
+		} else if *sGroup == "admin" {
+			err = messaging.SendEvent(ctx, "popup", "{\"title\": \"test\", \"message\": \"test Popup\"}", messaging.Topics.Admin)
+		}
+		return err
+	}
+	return errors.New("Access Denied")
 }
