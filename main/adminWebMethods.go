@@ -312,6 +312,7 @@ func startImport(w http.ResponseWriter, r *http.Request) error {
 
 var completed, total = 0, 1
 
+// TODO  fix import user to use multi put and update the userlist
 func importUsers(w http.ResponseWriter, r *http.Request) error {
 	ctx := appengine.NewContext(r)
 	debug := r.Form.Get("debug") == "true"
@@ -614,11 +615,11 @@ func sendMessage(w http.ResponseWriter, r *http.Request) error {
 			return errors.New(err.Error())
 		}
 		if *sGroup == "student" {
-			err = messaging.SendEvent(ctx, "popup", "{\"title\": \"test\", \"message\": \"test Popup\"}", messaging.Topics.Student)
+			err = messaging.SendEvent(ctx, messaging.EventTypes.Popup, "{\"title\": \"test\", \"message\": \"test Popup\"}", messaging.Topics.Student)
 		} else if *sGroup == "teacher" {
-			err = messaging.SendEvent(ctx, "popup", "{\"title\": \"test\", \"message\": \"test Popup\"}", messaging.Topics.Teacher)
+			err = messaging.SendEvent(ctx, messaging.EventTypes.Popup, "{\"title\": \"test\", \"message\": \"test Popup\"}", messaging.Topics.Teacher)
 		} else if *sGroup == "admin" {
-			err = messaging.SendEvent(ctx, "popup", "{\"title\": \"test\", \"message\": \"test Popup\"}", messaging.Topics.Admin)
+			err = messaging.SendEvent(ctx, messaging.EventTypes.Popup, "{\"title\": \"test\", \"message\": \"test Popup\"}", messaging.Topics.Admin)
 		}
 		return err
 	}

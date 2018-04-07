@@ -54,8 +54,10 @@ app.controller('assignStudentController', function($scope, $rootScope, $timeout,
   };
   
   controller.GetPreviousOpen = function() {
-  	getMethod("/student/open", {id: controller.selectedStudent.ID, Block: $rootScope.block}, 
-  			controller.changeStudent);
+    if (controller.selectedStudent != null) {
+  	  getMethod("/student/open", {id: controller.selectedStudent.ID, Block: $rootScope.block}, 
+          controller.changeStudent);
+    }
   }
   
   controller.changeStudent = function(previousOpen) {

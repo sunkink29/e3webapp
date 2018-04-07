@@ -12,14 +12,14 @@
       <div flex></div>
     </div>
     <div layout="column" layout-padding>
-      <div layout='row' ng-repeat="class in controller.currentClasses" flex>
+      <div layout='row' ng-repeat="class in controller.currentClasses" ng-init="index = $index" flex>
         <div style="transform: translateY(25%)" layout-padding flex>{{ (class.curBlock==0)?'Tue/Wed': 'Thr/Fri' }}</div>
         <div style="transform: translateY(25%)" flex>{{ class.Name }}</div>
-        <div style="transform: translateY(25%)" flex>{{ class.Block1.RoomNumber }}</div>
-        <div style="transform: translateY(25%)" flex>{{ class.Block1.BlockOpen?'Open': 'Closed' }}</div>
-        <div style="transform: translateY(25%)" flex>{{ class.Blocks1.Subject }}</div>
-        <div style="transform: translateY(25%)" flex>{{ class.Blocks1.Description }}</div>
-        <div style="transform: translateY(25%)" flex>{{ class.Blocks1.CurSize+' / ' + class.Block1.MaxSize }}</div>
+        <div style="transform: translateY(25%)" flex>{{ class.blocks[index].RoomNumber }}</div>
+        <div style="transform: translateY(25%)" flex>{{ class.blocks[index].BlockOpen?'Open': 'Closed' }}</div>
+        <div style="transform: translateY(25%)" flex>{{ class.blocks[index].Subject }}</div>
+        <div style="transform: translateY(25%)" flex>{{ class.blocks[index].Description }}</div>
+        <div style="transform: translateY(25%)" flex>{{ class.blocks[index].CurSize+' / ' + class.block1.MaxSize }}</div>
         <md-button  ng-disabled="true" >Change Class</md-button>
       </div>
     </div>
@@ -37,15 +37,15 @@
       <div flex></div>
     </div>
     <div layout="column" layout-padding>
-      <div layout='row' ng-repeat="class in controller.nextClasses" flex>
+      <div layout='row' ng-repeat="class in controller.nextClasses track by $index" ng-init="index = $index" flex>
         <div style="transform: translateY(25%)" layout-padding flex>{{ (class.curBlock==0)?'Tue/Wed': 'Thr/Fri' }}</div>
         <div style="transform: translateY(25%)" flex>{{ class.Name }}</div>
-        <div style="transform: translateY(25%)" flex>{{ class.Block1.RoomNumber }}</div>
-        <div style="transform: translateY(25%)" flex>{{ class.Block1.BlockOpen?'Open': 'Closed' }}</div>
-        <div style="transform: translateY(25%)" flex>{{ class.Block1.Subject }}</div>
-        <div style="transform: translateY(25%)" flex>{{ class.Block1.Description }}</div>
-        <div style="transform: translateY(25%)" flex>{{ class.Block1.CurSize+' / ' + class.Block1.MaxSize }}</div>
-        <md-button  ng-disabled="!class.Block1.BlockOpen" ng-click="controller.openDialog($event, $index)" >Change Class</md-button>
+        <div style="transform: translateY(25%)" flex>{{ class.blocks[index].RoomNumber }}</div>
+        <div style="transform: translateY(25%)" flex>{{ class.blocks[index].BlockOpen?'Open': 'Closed' }}</div>
+        <div style="transform: translateY(25%)" flex>{{ class.blocks[index].Subject }}</div>
+        <div style="transform: translateY(25%)" flex>{{ class.blocks[index].Description }}</div>
+        <div style="transform: translateY(25%)" flex>{{ class.blocks[index].CurSize+' / ' + class.blocks[index].MaxSize }}</div>
+        <md-button  ng-disabled="!class.blocks[index].BlockOpen" ng-click="controller.openDialog($event, $index)" >Change Class</md-button>
       </div>
     </div>
   </div>

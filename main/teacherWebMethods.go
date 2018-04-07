@@ -10,6 +10,7 @@ import (
 	"google.golang.org/appengine/datastore"
 
 	"github.com/sunkink29/e3webapp/errors"
+	"github.com/sunkink29/e3webapp/messaging"
 	"github.com/sunkink29/e3webapp/student"
 	"github.com/sunkink29/e3webapp/teacher"
 	"github.com/sunkink29/e3webapp/user"
@@ -205,9 +206,20 @@ func setBlocks(w http.ResponseWriter, r *http.Request) error {
 			cTchr.Block1 = blocks[0]
 			cTchr.Block2 = blocks[1]
 			cTchr.Edit(ctx)
+
+			teachers := []teacher.Teacher{*cTchr}
+			jTeachers, err := json.Marshal(teachers)
+			if err != nil {
+				return errors.New(err.Error())
+			}
+			message := string(jTeachers[:])
+
+			err = messaging.SendEvent(ctx, messaging.EventTypes.ClassEdit, message, messaging.Topics.Student)
+			if err != nil {
+				return err
+			}
 			return nil
 		}
-
 	}
 	return errors.New(errors.AccessDenied)
 }
@@ -244,43 +256,113 @@ func addStudentToClass(w http.ResponseWriter, r *http.Request) error {
 			return err
 		}
 
+		var stdntTchr *string
 		if variables.Block == 0 {
-			prevTeacher, err := teacher.WithEmail(ctx, stdnt.Teacher1, false, debug)
-			prevOpen := true
-			if err != nil && err.(errors.Error).Message != teacher.TeacherNotFound {
-				return err
-			} else if err == nil {
-				prevOpen = prevTeacher.Block1.BlockOpen
-			}
-			newFull := curT.Block1.CurSize >= curT.Block1.MaxSize
-
-			if prevOpen && !newFull {
-				stdnt.Teacher1 = curT.Email
-			} else {
-				if !prevOpen {
-					return errors.New("Current student class closed")
-				}
-				return errors.New("Current class full")
-			}
+			stdntTchr = &stdnt.Teacher1
 		} else {
-			prevTeacher, err := teacher.WithEmail(ctx, stdnt.Teacher2, false, debug)
-			prevOpen := true
-			if err != nil && err.(errors.Error).Message != teacher.TeacherNotFound {
-				return err
-			} else if err == nil {
-				prevOpen = prevTeacher.Block2.BlockOpen
-			}
-			newOpen := curT.Block2.BlockOpen
-			newFull := curT.Block2.CurSize >= curT.Block2.MaxSize
-
-			if prevOpen && newOpen && !newFull {
-				stdnt.Teacher2 = curT.Email
+			stdntTchr = &stdnt.Teacher2
+		}
+		prevTchr, err := teacher.WithEmail(ctx, *stdntTchr, false, debug)
+		prevOpen := true
+		if err != nil && err.(errors.Error).Message != teacher.TeacherNotFound {
+			return err
+		} else if err == nil {
+			if variables.Block == 0 {
+				prevOpen = prevTchr.Block1.BlockOpen
 			} else {
-				return errors.New(errors.AccessDenied)
+				prevOpen = prevTchr.Block2.BlockOpen
 			}
 		}
 
+		var newFull bool
+		if variables.Block == 0 {
+			newFull = curT.Block1.CurSize >= curT.Block1.MaxSize
+		} else {
+			newFull = curT.Block2.CurSize >= curT.Block2.MaxSize
+		}
+
+		if prevOpen && !newFull {
+			*stdntTchr = curT.Email
+		} else {
+			if !prevOpen {
+				return errors.New("Student Current class closed")
+			}
+			return errors.New("Current class full")
+		}
+
 		stdnt.Edit(ctx)
+
+		var block *teacher.Block
+		var prevBlock *teacher.Block
+		if variables.Block == 0 {
+			block = &curT.Block1
+			if prevTchr != nil {
+				prevBlock = &prevTchr.Block1
+			}
+		} else {
+			block = &curT.Block2
+			if prevTchr != nil {
+				prevBlock = &prevTchr.Block2
+			}
+		}
+
+		block.CurSize++
+		teachers := []teacher.Teacher{*curT}
+
+		if prevBlock != nil {
+			prevBlock.CurSize--
+			teachers = append(teachers, *prevTchr)
+		}
+
+		jTeachers, err := json.Marshal(teachers)
+		if err != nil {
+			return errors.New(err.Error())
+		}
+		message := string(jTeachers[:])
+		err = messaging.SendEvent(ctx, messaging.EventTypes.ClassEdit, message, messaging.Topics.Student)
+		if err != nil {
+			return err
+		}
+
+		stdntUsr, err := user.WithEmail(ctx, stdnt.Email, false)
+		if err != nil {
+			return err
+		}
+		changeTeacher := struct {
+			Block   int
+			Teacher teacher.Teacher
+		}{variables.Block, *curT}
+		jTeacher, err := json.Marshal(changeTeacher)
+		if err != nil {
+			return errors.New(err.Error())
+		}
+		message2 := string(jTeacher[:])
+		err = messaging.SendUserEvent(ctx, messaging.EventTypes.CurrentChange, message2, stdntUsr.RToken)
+		if err != nil {
+			return err
+		}
+
+		if prevTchr != nil {
+			tchrUsr, err := user.WithEmail(ctx, prevTchr.Email, false)
+			if err != nil {
+				return err
+			}
+			changeStudent := struct {
+				Block   int
+				Student *student.Student
+				Method  string
+			}{variables.Block, stdnt, "remove"}
+			jStudent, err := json.Marshal(changeStudent)
+			if err != nil {
+				return errors.New(err.Error())
+			}
+			message3 := string(jStudent[:])
+			err = messaging.SendUserEvent(ctx, messaging.EventTypes.StudentUpdate, message3, tchrUsr.RToken)
+			if err != nil {
+				return err
+			}
+		}
+
 		return nil
 	}
 	return errors.New(errors.AccessDenied)
@@ -318,23 +400,63 @@ func removeFromClass(w http.ResponseWriter, r *http.Request) error {
 			return err
 		}
 
+		var tchr *string
 		if variables.Block == 0 {
-			if stdnt.Teacher1 == usr.Email {
-				stdnt.Teacher1 = ""
-			} else {
-				return errors.New(errors.AccessDenied)
-			}
+			tchr = &stdnt.Teacher1
 		} else {
-			if stdnt.Teacher2 == usr.Email {
-				stdnt.Teacher2 = ""
-			} else {
-				return errors.New(errors.AccessDenied)
-			}
+			tchr = &stdnt.Teacher2
 		}
+
+		if *tchr == usr.Email {
+			*tchr = ""
+		} else {
+			return errors.New(errors.AccessDenied)
+		}
+
+		curT, err := teacher.Current(ctx, false, debug)
+		if err != nil {
+			return err
+		}
+
+		var block *teacher.Block
+		if variables.Block == 0 {
+			block = &curT.Block1
+		} else {
+			block = &curT.Block2
+		}
+		block.CurSize--
+		teacherList := []teacher.Teacher{*curT}
+		jTeachers, err := json.Marshal(teacherList)
+		if err != nil {
+			return errors.New(err.Error())
+		}
+		message := string(jTeachers[:])
+		err = messaging.SendEvent(ctx, messaging.EventTypes.ClassEdit, message, messaging.Topics.Student)
+		if err != nil {
+			return err
+		}
+
+		stdntUsr, err := user.WithEmail(ctx, stdnt.Email, false)
+		if err != nil {
+			return err
+		}
+
+		changeTeacher := struct {
+			Block   int
+			Teacher *teacher.Teacher
+		}{variables.Block, nil}
+		jTeacher, err := json.Marshal(changeTeacher)
+		if err != nil {
+			return errors.New(err.Error())
+		}
+		message2 := string(jTeacher[:])
+		err = messaging.SendUserEvent(ctx, messaging.EventTypes.CurrentChange, message2, stdntUsr.RToken)
+
 		err = stdnt.Edit(ctx)
 		if err != nil {
 			return err
 		}
+
 		return nil
 	}
 	return errors.New(errors.AccessDenied)

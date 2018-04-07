@@ -41,11 +41,21 @@ func FirebaseKey() string {
 
 // func
 
-type topic string
+type topic struct {
+	value string
+}
 
 var Topics = struct {
 	Student, Teacher, Admin topic
-}{topic("student"), topic("teacher"), topic("admin")}
+}{topic{"student"}, topic{"teacher"}, topic{"admin"}}
+
+type event struct {
+	value string
+}
+
+var EventTypes = struct {
+	Popup, ClassEdit, CurrentChange, StudentUpdate event
+}{event{"popup"}, event{"classEdit"}, event{"currentChange"}, event{"studentUpdate"}}
 
 var conf *firebase.Config
 var cred *Credentials
@@ -99,6 +109,9 @@ func RegisterTopicHandler(w http.ResponseWriter, r *http.Request) error {
 		return errors.New(err.Error())
 	}
 
+	curU.RToken = *token
+	curU.Edit(ctx)
+
 	if !curU.Teacher && !curU.Admin {
 		err = registerTopic(ctx, *token, Topics.Student)
 	} else {
@@ -121,7 +134,7 @@ func registerTopic(ctx context.Context, token string, group topic) error {
 
 	// return errors.New(string(group))
 	tokens := []string{token}
-	response, err := client.SubscribeToTopic(ctx, tokens, string(group))
+	response, err := client.SubscribeToTopic(ctx, tokens, group.value)
 	if err != nil {
 		return errors.New(err.Error())
 	}
@@ -131,15 +144,31 @@ func registerTopic(ctx context.Context, token string, group topic) error {
 	return nil
 }
 
-func SendEvent(ctx context.Context, event, data string, group topic) error {
+func SendEvent(ctx context.Context, event event, data string, group topic) error {
 	message := messaging.Message{
 		Data: map[string]string{
-			"event": event,
+			"event": event.value,
 			"data":  data,
 		},
-		Topic: string(group),
+		Topic: group.value,
 	}
 
+	return sendMessage(ctx, message)
+}
+
+func SendUserEvent(ctx context.Context, event event, data, Token string) error {
+	message := messaging.Message{
+		Data: map[string]string{
+			"event": event.value,
+			"data":  data,
+		},
+		Token: Token,
+	}
+
+	return sendMessage(ctx, message)
+}
+
+func sendMessage(ctx context.Context, message messaging.Message) error {
 	client, err := getClient(ctx)
 	if err != nil {
 		return errors.New(err.Error())

@@ -24,6 +24,20 @@ app.controller('teacherMainViewController', function($scope, $rootScope, $timeou
     }
     $scope.$apply();
   };
+
+  controller.onStudentUpdate = function(data) {
+    if (data.Method == "add") {
+      controller.NextStudents[data.Block].push(data.Student)
+    } else if (data.Method == "remove") {
+      for(var i = 0, len = controller.NextStudents[data.Block].length;i < len; i++){
+        if (data.Student.Email === controller.NextStudents[data.Block][i].Email) {
+          var list = controller.NextStudents;
+          list[data.Block].splice(i, 1);
+        }
+      }
+    }
+    $scope.$apply();
+  }
   
   controller.openDialog = function(ev, hash, block) {
   	controller.rootScope.ev = ev; 

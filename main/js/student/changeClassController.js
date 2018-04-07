@@ -1,8 +1,9 @@
 app.controller('changeClassController', function($scope, $rootScope, $mdDialog) {
   var controller = this;
   controller.rootScope = $rootScope;
-  $rootScope.changeClass = $scope;
+  $rootScope.changeClass = this;
   controller.classes = [{name:'Loading'}];
+  controller.blockChange = 0
   
   controller.requestTeachers = function () {
     controller.classes = [{name:'Loading'}];
@@ -10,17 +11,27 @@ app.controller('changeClassController', function($scope, $rootScope, $mdDialog) 
   };
   
   controller.updateTeachers = function (teachers) {
+    teachers.forEach(function(teacher, index) {
+      teachers[index].blocks = [teacher.Block1, teacher.Block2]
+    })
     controller.classes = teachers;
     $scope.$apply();
   };
+
+  controller.onClassEdit = function(teachers) {
+    teachers.forEach(function(teacher, index) {
+      controller.classes.forEach(function(element, index) {
+        if (element.Email == teacher.Email) {
+          controller.classes[index] = teacher
+        }
+      });
+      teachers[index].blocks = [teacher.Block1, teacher.Block2]
+    });
+    $scope.$apply();
+  }
   
   controller.selectClass = function (teacher) {
-    teacher.curBlock = $rootScope.requestedChange.curBlock;
-    controller.requestTeachers();
-    if (teacher.curBlock === 1) {
-    	teacher.Block1 = teacher.Block2;
-    }
-    teacher.Block1.CurSize++;
+    teacher.curBlock = controller.blockChange;
     $rootScope.mainView.nextClasses[teacher.curBlock] = teacher;
     postMethod("/student/setteacher", {"ID": teacher.ID,"Block": teacher.curBlock}, controller.updateTeachers);
     controller.closeDialog();
@@ -32,12 +43,10 @@ app.controller('changeClassController', function($scope, $rootScope, $mdDialog) 
   
   $(window).on('hashchange', function() {
 	if (window.location.hash === "#change0") {
-		$rootScope.requestedChange = $rootScope.mainView.nextClasses[0];
-		$rootScope.requestedChange.curBlock = 0;
+		controller.blockChange = 0
 		controller.showDialog();
 	}else if (window.location.hash === "#change1") {
-		$rootScope.requestedChange = $rootScope.mainView.nextClasses[1];
-		$rootScope.requestedChange.curBlock = 1;
+		controller.blockChange = 1
 		controller.showDialog();
 	}
     $scope.$apply();

@@ -1,4 +1,4 @@
-app.controller('messaging', function($mdDialog) {
+app.controller('messaging', function($mdDialog, $rootScope) {
     var ctrl = this;
     const messaging = firebase.messaging();
     messaging.usePublicVapidKey(firebaseKey);
@@ -31,17 +31,32 @@ app.controller('messaging', function($mdDialog) {
     });
 
     function onMessage (payload) {
-      //console.log('Message received. ', payload);
-      console.log(payload.data)
+      console.log('Message received. ', payload);
+      var data = true
+      if (payload.data.data) {
+        data = JSON.parse(payload.data.data);
+      }
       if (payload.data.event === "popup") {
-        var data = JSON.parse(payload.data.data);
         alert = $mdDialog.alert({
           title: data.title,
           textContent: data.message,
           ok: 'Close'
         });
         $mdDialog.show( alert );
-      };
+      } else if (isTeacher) {
+        if (payload.data.event === "studentUpdate") {
+          $rootScope.mainView.onStudentUpdate(data)
+        }
+      } else {
+        if (payload.data.event === "classEdit") {
+          $rootScope.changeClass.onClassEdit(data);
+          var data2 = {Block: -1, Teachers: data}
+          $rootScope.mainView.onCurrentChange(data2);
+        } else if (payload.data.event === "currentChange") {
+          $rootScope.mainView.onCurrentChange(data);
+        }
+      }
+      
     }
     
     messaging.onMessage(onMessage)

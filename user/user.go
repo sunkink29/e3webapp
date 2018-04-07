@@ -1,9 +1,10 @@
 package user
 
 import (
+	"encoding/json"
+
 	"golang.org/x/net/context"
 	"golang.org/x/oauth2"
-	"encoding/json"
 	"google.golang.org/appengine/datastore"
 	appUser "google.golang.org/appengine/user"
 
@@ -15,8 +16,9 @@ type User struct {
 	ID             string `datastore:"-"`
 	Email, Name    string
 	Teacher, Admin bool
-	AuthState string `json:"-"`
-	Token *oauth2.Token `json:"-"`
+	AuthState      string        `json:"-"`
+	Token          *oauth2.Token `json:"-"`
+	RToken         string        `json:"-"`
 }
 
 func (u *User) Load(ps []datastore.Property) error {
@@ -34,13 +36,15 @@ func (u *User) Load(ps []datastore.Property) error {
 			u.AuthState = p.Value.(string)
 		case "Token":
 			if p.Value.(string) != "null" {
-				u.Token = new (oauth2.Token)
+				u.Token = new(oauth2.Token)
 				tByte := []byte(p.Value.(string))
 				err := json.Unmarshal(tByte, u.Token)
 				if err != nil {
 					u.Token = nil
 				}
 			}
+		case "RToken":
+			u.RToken = p.Value.(string)
 		}
 	}
 	return nil
@@ -57,17 +61,20 @@ func (u *User) Save() ([]datastore.Property, error) {
 			Name:  "Name",
 			Value: u.Name,
 		}, {
-			Name: "Teacher",
+			Name:  "Teacher",
 			Value: u.Teacher,
 		}, {
-			Name: "Admin",
+			Name:  "Admin",
 			Value: u.Admin,
 		}, {
-			Name: "AuthState",
+			Name:  "AuthState",
 			Value: u.AuthState,
 		}, {
-			Name: "Token",
+			Name:  "Token",
 			Value: sToken,
+		}, {
+			Name:  "RToken",
+			Value: u.RToken,
 		},
 	}, err
 }
@@ -80,7 +87,7 @@ func (usr *User) New(ctx context.Context, debug bool) error {
 	if err != nil {
 		return errors.New(err.Error())
 	}
-		usr.ID = newK.Encode()
+	usr.ID = newK.Encode()
 	return nil
 }
 
@@ -103,7 +110,7 @@ func (usr *User) Delete(ctx context.Context) error {
 	if err != nil {
 		return errors.New(err.Error())
 	}
-	
+
 	err = datastore.Delete(ctx, key)
 	if err != nil {
 		return errors.New(err.Error())

@@ -193,15 +193,17 @@
       {{ includeHTML "html/admin/removeUser.html" }}
       {{ includeHTML "html/admin/viewSchedule.html" }}
       {{ includeHTML "html/admin/importOption.html" }}
-      <md-button flex="50" onclick="postMethod('/admin/sendmessage','student')">test student messaging </md-button>
-      <md-button flex="50"onclick="postMethod('/admin/sendmessage','admin')">test admin messaging</md-button>
+      <!-- <md-button flex="50" onclick="postMethod('/admin/sendmessage','student')">test student messaging </md-button>
+      <md-button flex="50"onclick="postMethod('/admin/sendmessage','admin')">test admin messaging</md-button> -->
     {{ end }}
     {{ if .Teacher }}
+      <script>var isTeacher = true;</script>
       <script src="/js/teacher/teacherMainViewController.js"></script>
       {{ includeHTML "html/teacher/assignStudent.html" }}
       {{ includeHTML "html/teacher/editClass.html" }}
     {{ end }}
     {{ if and (not .Admin) (not .Teacher) }}
+      <script>var isTeacher = false;</script>
       <script src="/js/student/studentMainViewController.js"></script>
       {{ includeHTML "html/student/changeClass.html" }}
     {{ end }}

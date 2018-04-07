@@ -2,7 +2,7 @@
   <div id="change" class='md-dialog-container' ng-controller="changeClassController as controller">
     <md-dialog class="dialog-table-size" layout-padding>
       <md-dialog-content>
-        <h2>Change {{ (controller.rootScope.requestedChange.curBlock==0)?'Tue/Wed': 'Thr/Fri' }} </h2>
+        <h2>Change {{ (controller.blockChange==0)?'Tue/Wed': 'Thr/Fri' }} </h2>
         <div>
           <div layout="row" layout-padding>
             <div flex>Teacher</div>
@@ -14,15 +14,15 @@
             <div flex></div>
           </div>
           <div layout="column" layout-padding>
-            <div layout='row' ng-repeat="class in controller.classes" ng-if="((controller.rootScope.requestedChange.curBlock == 0)?class.Block1.MaxSize: class.Block2.MaxSize) > 0 && controller.rootScope.requestedChange.Email !== class.Email">
+            <div layout='row' ng-repeat="class in controller.classes" ng-if="class.blocks[controller.blockChange].MaxSize > 0 && controller.rootScope.mainView.nextClasses[controller.blockChange].Email !== class.Email">
               <div style="transform: translateY(25%)" flex>{{ class.Name }}</div>
-              <div style="transform: translateY(25%)" flex>{{ (controller.rootScope.requestedChange.curBlock == 0)?class.Block1.RoomNumber: class.Block2.RoomNumber }}</div>
-              <div style="transform: translateY(25%)" flex>{{ (controller.rootScope.requestedChange.curBlock == 0)?class.Block1.BlockOpen?'Open':'closed': class.Block2.BlockOpen?'Open':'closed'}}</div>
-              <div style="transform: translateY(25%)" flex>{{ (controller.rootScope.requestedChange.curBlock == 0)?class.Block1.Subject: class.Block2.Subject }}</div>
-              <div style="transform: translateY(25%)" flex>{{ (controller.rootScope.requestedChange.curBlock == 0)?class.Block1.Description: class.Block2.Description }}</div>
-              <div style="transform: translateY(25%)" flex>{{ ((controller.rootScope.requestedChange.curBlock == 0)?class.Block1.CurSize: class.Block2.CurSize)+' / '+((controller.rootScope.requestedChange.curBlock == 0)?class.Block1.MaxSize: class.Block2.MaxSize) }}</div>
-              <md-button ng-disabled="!(((controller.rootScope.requestedChange.curBlock == 0)?class.Block1.BlockOpen: class.Block2.BlockOpen)&& 
-                  ((controller.rootScope.requestedChange.curBlock == 0)?class.Block1.CurSize: class.Block2.CurSize) < ((controller.rootScope.requestedChange.curBlock == 0)?class.Block1.MaxSize: class.Block2.MaxSize))"
+              <div style="transform: translateY(25%)" flex>{{ class.blocks[controller.blockChange].RoomNumber }}</div>
+              <div style="transform: translateY(25%)" flex>{{ class.blocks[controller.blockChange].BlockOpen?'Open':'closed' }}</div>
+              <div style="transform: translateY(25%)" flex>{{ class.blocks[controller.blockChange].Subject }}</div>
+              <div style="transform: translateY(25%)" flex>{{ class.blocks[controller.blockChange].Description }}</div>
+              <div style="transform: translateY(25%)" flex>{{ class.blocks[controller.blockChange].CurSize+' / '+class.blocks[controller.blockChange].MaxSize }}</div>
+              <md-button ng-disabled="!(class.blocks[controller.blockChange].BlockOpen &&
+                  class.blocks[controller.blockChange].CurSize < class.blocks[controller.blockChange].MaxSize)"
                   ng-click="controller.selectClass(class)">Select Class</md-button>
             </div>
           </div>

@@ -244,7 +244,7 @@ func WithEmail(ctx context.Context, email string, current bool, debug bool) (*Te
 	return &tchr, nil
 }
 
-// All returns all of the teachers 
+// All returns all of the teachers
 func All(ctx context.Context, current bool, debug bool) ([]*Teacher, error) {
 	ancestor := parentKey(ctx, debug)
 	q := datastore.NewQuery("Teacher").Ancestor(ancestor).Filter("Current =", current)
@@ -269,8 +269,6 @@ func All(ctx context.Context, current bool, debug bool) ([]*Teacher, error) {
 	}
 	return tchrs, nil
 }
-
-
 
 func parentKey(ctx context.Context, debug bool) *datastore.Key {
 	var keyLiteral string
