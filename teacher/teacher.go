@@ -105,8 +105,8 @@ func (t *Teacher) Save() ([]datastore.Property, error) {
 }
 
 // New stores the given teacher as a new teacher
-func (tchr *Teacher) New(ctx context.Context, debug bool) error {
-	pKey := parentKey(ctx, debug)
+func (tchr *Teacher) New(ctx context.Context) error {
+	pKey := parentKey(ctx)
 	k := datastore.NewIncompleteKey(ctx, "Teacher", pKey)
 	k, err := datastore.Put(ctx, k, tchr)
 	if err != nil {
@@ -130,8 +130,8 @@ func (tchr *Teacher) Edit(ctx context.Context) error {
 }
 
 // StudentCount returns the student count for the given block
-func (tchr *Teacher) StudentCount(ctx context.Context, block int, debug bool) (int, error) {
-	ancestor := student.ParentKey(ctx, debug)
+func (tchr *Teacher) StudentCount(ctx context.Context, block int) (int, error) {
+	ancestor := student.ParentKey(ctx)
 	var sBlock string
 	if block == 0 {
 		sBlock = "Teacher1"
@@ -147,8 +147,8 @@ func (tchr *Teacher) StudentCount(ctx context.Context, block int, debug bool) (i
 }
 
 // StudentList returns a list of the students in the block given of the given teacher
-func (tchr *Teacher) StudentList(ctx context.Context, block int, debug bool) ([]*student.Student, error) {
-	ancestor := student.ParentKey(ctx, debug)
+func (tchr *Teacher) StudentList(ctx context.Context, block int) ([]*student.Student, error) {
+	ancestor := student.ParentKey(ctx)
 	var sBlock string
 	if block == 0 {
 		sBlock = "Teacher1"
@@ -184,9 +184,9 @@ func (tchr *Teacher) Delete(ctx context.Context) error {
 }
 
 // Current returns the current Teacher
-func Current(ctx context.Context, current bool, debug bool) (*Teacher, error) {
+func Current(ctx context.Context, current bool) (*Teacher, error) {
 	usr := appUser.Current(ctx)
-	tchr, err := WithEmail(ctx, usr.Email, current, debug)
+	tchr, err := WithEmail(ctx, usr.Email, current)
 	if err != nil {
 		return nil, err
 	}
@@ -194,20 +194,20 @@ func Current(ctx context.Context, current bool, debug bool) (*Teacher, error) {
 }
 
 // WithKey returns the teacher with the given key
-func WithKey(ctx context.Context, k *datastore.Key, debug bool) (*Teacher, error) {
+func WithKey(ctx context.Context, k *datastore.Key) (*Teacher, error) {
 	var tchr = new(Teacher)
 	err := datastore.Get(ctx, k, tchr)
 	if err != nil {
 		return nil, errors.New(err.Error())
 	}
 	tchr.ID = k.Encode()
-	count, err := tchr.StudentCount(ctx, 0, debug)
+	count, err := tchr.StudentCount(ctx, 0)
 	if err != nil {
 		return nil, err
 	}
 	tchr.Block1.CurSize = count
 
-	count, err = tchr.StudentCount(ctx, 1, debug)
+	count, err = tchr.StudentCount(ctx, 1)
 	if err != nil {
 		return nil, err
 	}
@@ -216,8 +216,8 @@ func WithKey(ctx context.Context, k *datastore.Key, debug bool) (*Teacher, error
 }
 
 // WithEmail reterns the first teacher with matching email
-func WithEmail(ctx context.Context, email string, current bool, debug bool) (*Teacher, error) {
-	ancestor := parentKey(ctx, debug)
+func WithEmail(ctx context.Context, email string, current bool) (*Teacher, error) {
+	ancestor := parentKey(ctx)
 	q := datastore.NewQuery("Teacher").Ancestor(ancestor).Filter("Email =", email).Filter("Current =", current)
 	t := q.Run(ctx)
 	var tchr Teacher
@@ -230,13 +230,13 @@ func WithEmail(ctx context.Context, email string, current bool, debug bool) (*Te
 	}
 	tchr.ID = key.Encode()
 
-	count, err := tchr.StudentCount(ctx, 0, debug)
+	count, err := tchr.StudentCount(ctx, 0)
 	if err != nil {
 		return nil, err
 	}
 	tchr.Block1.CurSize = count
 
-	count, err = tchr.StudentCount(ctx, 1, debug)
+	count, err = tchr.StudentCount(ctx, 1)
 	if err != nil {
 		return nil, err
 	}
@@ -245,8 +245,8 @@ func WithEmail(ctx context.Context, email string, current bool, debug bool) (*Te
 }
 
 // All returns all of the teachers
-func All(ctx context.Context, current bool, debug bool) ([]*Teacher, error) {
-	ancestor := parentKey(ctx, debug)
+func All(ctx context.Context, current bool) ([]*Teacher, error) {
+	ancestor := parentKey(ctx)
 	q := datastore.NewQuery("Teacher").Ancestor(ancestor).Filter("Current =", current)
 	var tchrs []*Teacher
 	keys, err := q.GetAll(ctx, &tchrs)
@@ -255,13 +255,13 @@ func All(ctx context.Context, current bool, debug bool) ([]*Teacher, error) {
 	}
 	for i, tchr := range tchrs {
 		tchr.ID = keys[i].Encode()
-		count, err := tchr.StudentCount(ctx, 0, debug)
+		count, err := tchr.StudentCount(ctx, 0)
 		if err != nil {
 			return nil, err
 		}
 		tchr.Block1.CurSize = count
 
-		count, err = tchr.StudentCount(ctx, 1, debug)
+		count, err = tchr.StudentCount(ctx, 1)
 		if err != nil {
 			return nil, err
 		}
@@ -270,12 +270,6 @@ func All(ctx context.Context, current bool, debug bool) ([]*Teacher, error) {
 	return tchrs, nil
 }
 
-func parentKey(ctx context.Context, debug bool) *datastore.Key {
-	var keyLiteral string
-	if debug {
-		keyLiteral = "Debug"
-	} else {
-		keyLiteral = "Release"
-	}
-	return datastore.NewKey(ctx, "Teacher", keyLiteral, 0, nil)
+func parentKey(ctx context.Context) *datastore.Key {
+	return datastore.NewKey(ctx, "Teacher", "Release", 0, nil)
 }

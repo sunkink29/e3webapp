@@ -64,7 +64,7 @@ func InitAuth(ctx context.Context) error {
 }
 
 func Client(ctx context.Context) (*http.Client, error) {
-	usr, err := Current(ctx, false)
+	usr, err := Current(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -87,7 +87,7 @@ func Client(ctx context.Context) (*http.Client, error) {
 }
 
 func requestToken(ctx context.Context) error {
-	usr, err := Current(ctx, false)
+	usr, err := Current(ctx)
 	if err != nil {
 		return err
 	}
@@ -104,7 +104,7 @@ func requestToken(ctx context.Context) error {
 
 func AuthHandle(w http.ResponseWriter, r *http.Request) {
 	ctx := appengine.NewContext(r)
-	usr, err := Current(ctx, false)
+	usr, err := Current(ctx)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return

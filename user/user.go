@@ -80,8 +80,8 @@ func (u *User) Save() ([]datastore.Property, error) {
 }
 
 // New stores the given user as a new user
-func (usr *User) New(ctx context.Context, debug bool) error {
-	pKey := parentKey(ctx, debug)
+func (usr *User) New(ctx context.Context) error {
+	pKey := parentKey(ctx)
 	k := datastore.NewIncompleteKey(ctx, "User", pKey)
 	newK, err := datastore.Put(ctx, k, usr)
 	if err != nil {
@@ -119,9 +119,9 @@ func (usr *User) Delete(ctx context.Context) error {
 }
 
 // Current returns the current User
-func Current(ctx context.Context, debug bool) (*User, error) {
+func Current(ctx context.Context) (*User, error) {
 	u := appUser.Current(ctx)
-	user, err := WithEmail(ctx, u.Email, debug)
+	user, err := WithEmail(ctx, u.Email)
 	if err != nil {
 		return nil, err
 	}
@@ -140,8 +140,8 @@ func WithKey(ctx context.Context, k *datastore.Key) (*User, error) {
 }
 
 // WithEmail reterns the first user with matching email
-func WithEmail(ctx context.Context, email string, debug bool) (*User, error) {
-	ancestor := parentKey(ctx, debug)
+func WithEmail(ctx context.Context, email string) (*User, error) {
+	ancestor := parentKey(ctx)
 	q := datastore.NewQuery("User").Ancestor(ancestor).Filter("Email =", email)
 	t := q.Run(ctx)
 	var user User
@@ -157,8 +157,8 @@ func WithEmail(ctx context.Context, email string, debug bool) (*User, error) {
 }
 
 // GetAll returns all users
-func All(ctx context.Context, debug bool) ([]*User, error) {
-	ancestor := parentKey(ctx, debug)
+func All(ctx context.Context) ([]*User, error) {
+	ancestor := parentKey(ctx)
 	q := datastore.NewQuery("User").Ancestor(ancestor).Order("Name")
 	var users []*User
 	keys, err := q.GetAll(ctx, &users)
@@ -171,12 +171,6 @@ func All(ctx context.Context, debug bool) ([]*User, error) {
 	return users, nil
 }
 
-func parentKey(ctx context.Context, debug bool) *datastore.Key {
-	var keyLiteral string
-	if debug {
-		keyLiteral = "Debug"
-	} else {
-		keyLiteral = "Release"
-	}
-	return datastore.NewKey(ctx, "User", keyLiteral, 0, nil)
+func parentKey(ctx context.Context) *datastore.Key {
+	return datastore.NewKey(ctx, "User", "Release", 0, nil)
 }

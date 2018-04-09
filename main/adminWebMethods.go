@@ -56,8 +56,7 @@ func addFirstUser(w http.ResponseWriter, r *http.Request) error {
 		return errors.New(errors.AccessDenied)
 	}
 	ctx := appengine.NewContext(r)
-	debug := r.Form.Get("debug") == "true"
-	if users, _ := user.All(ctx, debug); len(users) <= 0 {
+	if users, _ := user.All(ctx); len(users) <= 0 {
 		usr := new(user.User)
 		uByte := []byte(r.Form.Get("user"))
 		err := json.Unmarshal(uByte, usr)
@@ -65,7 +64,7 @@ func addFirstUser(w http.ResponseWriter, r *http.Request) error {
 			return errors.New(err.Error())
 		}
 
-		err = usr.New(ctx, debug)
+		err = usr.New(ctx)
 		return err
 	}
 	return errors.New(errors.AccessDenied)
@@ -73,8 +72,7 @@ func addFirstUser(w http.ResponseWriter, r *http.Request) error {
 
 func addNewUser(w http.ResponseWriter, r *http.Request) error {
 	ctx := appengine.NewContext(r)
-	debug := r.Form.Get("debug") == "true"
-	curU, err := user.Current(ctx, debug)
+	curU, err := user.Current(ctx)
 	if err != nil {
 		return err
 	}
@@ -84,7 +82,7 @@ func addNewUser(w http.ResponseWriter, r *http.Request) error {
 		if err := decoder.Decode(usr); err != nil {
 			return errors.New(err.Error())
 		}
-		err := usr.New(ctx, debug)
+		err := usr.New(ctx)
 		userList = append(userList, usr)
 		return err
 	}
@@ -94,8 +92,7 @@ func addNewUser(w http.ResponseWriter, r *http.Request) error {
 
 func getCurrent(w http.ResponseWriter, r *http.Request) error {
 	ctx := appengine.NewContext(r)
-	debug := r.Form.Get("debug") == "true"
-	curU, err := user.Current(ctx, debug)
+	curU, err := user.Current(ctx)
 	if err != nil {
 		return err
 	}
@@ -112,8 +109,7 @@ func getCurrent(w http.ResponseWriter, r *http.Request) error {
 
 func editUser(w http.ResponseWriter, r *http.Request) error {
 	ctx := appengine.NewContext(r)
-	debug := r.Form.Get("debug") == "true"
-	curU, err := user.Current(ctx, debug)
+	curU, err := user.Current(ctx)
 	if err != nil {
 		return err
 	}
@@ -138,8 +134,7 @@ func editUser(w http.ResponseWriter, r *http.Request) error {
 
 func deleteUser(w http.ResponseWriter, r *http.Request) error {
 	ctx := appengine.NewContext(r)
-	debug := r.Form.Get("debug") == "true"
-	curU, err := user.Current(ctx, debug)
+	curU, err := user.Current(ctx)
 	if err != nil {
 		return err
 	}
@@ -166,8 +161,7 @@ var userList []*user.User
 
 func getAllUsers(w http.ResponseWriter, r *http.Request) error {
 	ctx := appengine.NewContext(r)
-	debug := r.Form.Get("debug") == "true"
-	curU, err := user.Current(ctx, debug)
+	curU, err := user.Current(ctx)
 	if err != nil {
 		return err
 	}
@@ -175,7 +169,7 @@ func getAllUsers(w http.ResponseWriter, r *http.Request) error {
 
 		if len(userList) == 0 {
 			var err error
-			if userList, err = user.All(ctx, debug); err != nil {
+			if userList, err = user.All(ctx); err != nil {
 				return err
 			}
 		}
@@ -194,8 +188,7 @@ func getAllUsers(w http.ResponseWriter, r *http.Request) error {
 
 func getStudentsInClass(w http.ResponseWriter, r *http.Request) error {
 	ctx := appengine.NewContext(r)
-	debug := r.Form.Get("debug") == "true"
-	curU, err := user.Current(ctx, debug)
+	curU, err := user.Current(ctx)
 	if err != nil {
 		return err
 	}
@@ -205,17 +198,17 @@ func getStudentsInClass(w http.ResponseWriter, r *http.Request) error {
 			return errors.New(err.Error())
 		}
 
-		tchr, err := teacher.WithKey(ctx, key, debug)
+		tchr, err := teacher.WithKey(ctx, key)
 		if err != nil {
 			return err
 		}
 
-		block1, err := tchr.StudentList(ctx, 0, debug)
+		block1, err := tchr.StudentList(ctx, 0)
 		if err != nil {
 			return err
 		}
 
-		block2, err := tchr.StudentList(ctx, 1, debug)
+		block2, err := tchr.StudentList(ctx, 1)
 		if err != nil {
 			return err
 		}
@@ -239,8 +232,7 @@ type progressType struct {
 
 func startImport(w http.ResponseWriter, r *http.Request) error {
 	ctx := appengine.NewContext(r)
-	debug := r.Form.Get("debug") == "true"
-	curU, err := user.Current(ctx, debug)
+	curU, err := user.Current(ctx)
 	if err != nil {
 		return err
 	}
@@ -315,7 +307,6 @@ var completed, total = 0, 1
 // TODO  fix import user to use multi put and update the userlist
 func importUsers(w http.ResponseWriter, r *http.Request) error {
 	ctx := appengine.NewContext(r)
-	debug := r.Form.Get("debug") == "true"
 
 	id := r.Form.Get("ID")
 	sToken := r.Form.Get("token")
@@ -422,12 +413,12 @@ func importUsers(w http.ResponseWriter, r *http.Request) error {
 		//			fmt.Fprintln(w, sum)
 		//			return nil
 
-		users, err := user.All(ctx, false)
+		users, err := user.All(ctx)
 		if err != nil {
 			return err
 		}
 
-		stdnts, err := student.All(ctx, false, false)
+		stdnts, err := student.All(ctx, false)
 		if err != nil {
 			return err
 		}
@@ -484,7 +475,7 @@ func importUsers(w http.ResponseWriter, r *http.Request) error {
 					stdnt.Grade, err = strconv.Atoi(row[grade].(string))
 					stdnt.Current = false
 					if _, ok := stdntMap[usr.Email]; !ok {
-						stdnt.New(ctx, false)
+						stdnt.New(ctx)
 					} else {
 						oldStdnt := stdntMap[usr.Email]
 						stdnt.ID = oldStdnt.ID
@@ -496,7 +487,7 @@ func importUsers(w http.ResponseWriter, r *http.Request) error {
 					}
 				}
 				if _, ok := userMap[usr.Email]; !ok {
-					usr.New(ctx, false)
+					usr.New(ctx)
 				} else {
 					oldUsr := userMap[usr.Email]
 					usr.ID = oldUsr.ID
@@ -524,10 +515,10 @@ func importUsers(w http.ResponseWriter, r *http.Request) error {
 				stdnt.Delete(ctx)
 			}
 		}
-		if userList, err = user.All(ctx, debug); err != nil {
+		if userList, err = user.All(ctx); err != nil {
 			return err
 		}
-		if studentList, err = student.All(ctx, false, debug); err != nil {
+		if studentList, err = student.All(ctx, false); err != nil {
 			return err
 		}
 	}
@@ -603,8 +594,7 @@ func setFirebaseAuthInfo(w http.ResponseWriter, r *http.Request) error {
 
 func sendMessage(w http.ResponseWriter, r *http.Request) error {
 	ctx := appengine.NewContext(r)
-	debug := r.Form.Get("debug") == "true"
-	curU, err := user.Current(ctx, debug)
+	curU, err := user.Current(ctx)
 	if err != nil {
 		return err
 	}

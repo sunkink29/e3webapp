@@ -32,7 +32,6 @@ func addStudentMethods() {
 
 func setTeacher(w http.ResponseWriter, r *http.Request) error {
 	ctx := appengine.NewContext(r)
-	debug := r.Form.Get("debug") == "true"
 	decoder := json.NewDecoder(r.Body)
 	var variables struct {
 		ID    string
@@ -42,7 +41,7 @@ func setTeacher(w http.ResponseWriter, r *http.Request) error {
 		return errors.New(err.Error())
 	}
 
-	stdnt, err := student.Current(ctx, false, debug)
+	stdnt, err := student.Current(ctx, false)
 	if err != nil {
 		return err
 	}
@@ -50,7 +49,7 @@ func setTeacher(w http.ResponseWriter, r *http.Request) error {
 	if err != nil {
 		return errors.New(err.Error())
 	}
-	newTeacher, err := teacher.WithKey(ctx, key, debug)
+	newTeacher, err := teacher.WithKey(ctx, key)
 	if err != nil {
 		return err
 	}
@@ -61,7 +60,7 @@ func setTeacher(w http.ResponseWriter, r *http.Request) error {
 	} else {
 		tchr = stdnt.Teacher2
 	}
-	prevTeacher, err := teacher.WithEmail(ctx, tchr, false, debug)
+	prevTeacher, err := teacher.WithEmail(ctx, tchr, false)
 	prevOpen := true
 	if err != nil && err.(errors.Error).Message != teacher.TeacherNotFound {
 		return err
@@ -96,7 +95,7 @@ func setTeacher(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
-	newtchrUsr, err := user.WithEmail(ctx, newTeacher.Email, false)
+	newtchrUsr, err := user.WithEmail(ctx, newTeacher.Email)
 	if err != nil {
 		return err
 	}
@@ -118,7 +117,7 @@ func setTeacher(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 	if prevTeacher != nil {
-		prevtchrUsr, err := user.WithEmail(ctx, prevTeacher.Email, false)
+		prevtchrUsr, err := user.WithEmail(ctx, prevTeacher.Email)
 		if err != nil {
 			return err
 		}
@@ -153,18 +152,17 @@ func setTeacher(w http.ResponseWriter, r *http.Request) error {
 
 func getCurrentStudentBlocks(w http.ResponseWriter, r *http.Request) error {
 	ctx := appengine.NewContext(r)
-	debug := r.Form.Get("debug") == "true"
 	current := r.Form.Get("current") == "true"
 
-	stdnt, err := student.Current(ctx, current, debug)
+	stdnt, err := student.Current(ctx, current)
 	if err != nil {
 		return err
 	}
-	block1, err := teacher.WithEmail(ctx, stdnt.Teacher1, current, debug)
+	block1, err := teacher.WithEmail(ctx, stdnt.Teacher1, current)
 	if err != nil && err.(errors.Error).Message != teacher.TeacherNotFound {
 		return err
 	}
-	block2, err := teacher.WithEmail(ctx, stdnt.Teacher2, current, debug)
+	block2, err := teacher.WithEmail(ctx, stdnt.Teacher2, current)
 	if err != nil && err.(errors.Error).Message != teacher.TeacherNotFound {
 		return err
 	}
@@ -180,8 +178,7 @@ func getCurrentStudentBlocks(w http.ResponseWriter, r *http.Request) error {
 
 func newStudent(w http.ResponseWriter, r *http.Request) error {
 	ctx := appengine.NewContext(r)
-	debug := r.Form.Get("debug") == "true"
-	curU, err := user.Current(ctx, debug)
+	curU, err := user.Current(ctx)
 	if err != nil {
 		return err
 	}
@@ -191,7 +188,7 @@ func newStudent(w http.ResponseWriter, r *http.Request) error {
 		if err := decoder.Decode(newS); err != nil {
 			return errors.New(err.Error())
 		}
-		err := newS.New(ctx, debug)
+		err := newS.New(ctx)
 		studentList = append(studentList, newS)
 		return err
 	}
@@ -200,8 +197,7 @@ func newStudent(w http.ResponseWriter, r *http.Request) error {
 
 func editStudent(w http.ResponseWriter, r *http.Request) error {
 	ctx := appengine.NewContext(r)
-	debug := r.Form.Get("debug") == "true"
-	curU, err := user.Current(ctx, debug)
+	curU, err := user.Current(ctx)
 	if err != nil {
 		return err
 	}
@@ -224,8 +220,7 @@ func editStudent(w http.ResponseWriter, r *http.Request) error {
 
 func deleteStudent(w http.ResponseWriter, r *http.Request) error {
 	ctx := appengine.NewContext(r)
-	debug := r.Form.Get("debug") == "true"
-	curU, err := user.Current(ctx, debug)
+	curU, err := user.Current(ctx)
 	if err != nil {
 		return err
 	}
@@ -251,10 +246,9 @@ var studentList []*student.Student
 
 func getAllStudents(w http.ResponseWriter, r *http.Request) error {
 	ctx := appengine.NewContext(r)
-	debug := r.Form.Get("debug") == "true"
 	if len(studentList) == 0 {
 		var err error
-		if studentList, err = student.All(ctx, false, debug); err != nil {
+		if studentList, err = student.All(ctx, false); err != nil {
 			return err
 		}
 	}
@@ -285,7 +279,7 @@ func studentClassOpen(w http.ResponseWriter, r *http.Request) error {
 
 	open := true
 	if block == 0 {
-		Teacher, err := teacher.WithEmail(ctx, stdnt.Teacher1, false, false)
+		Teacher, err := teacher.WithEmail(ctx, stdnt.Teacher1, false)
 
 		if err != nil && err.(errors.Error).Message != teacher.TeacherNotFound {
 			return err
@@ -293,7 +287,7 @@ func studentClassOpen(w http.ResponseWriter, r *http.Request) error {
 			open = Teacher.Block1.BlockOpen
 		}
 	} else {
-		Teacher, err := teacher.WithEmail(ctx, stdnt.Teacher2, false, false)
+		Teacher, err := teacher.WithEmail(ctx, stdnt.Teacher2, false)
 		if err != nil && err.(errors.Error).Message != teacher.TeacherNotFound {
 			return err
 		} else if err == nil {

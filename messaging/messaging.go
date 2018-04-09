@@ -97,8 +97,7 @@ func getClient(ctx context.Context) (*messaging.Client, error) {
 
 func RegisterTopicHandler(w http.ResponseWriter, r *http.Request) error {
 	ctx := appengine.NewContext(r)
-	debug := r.Form.Get("debug") == "true"
-	curU, err := user.Current(ctx, debug)
+	curU, err := user.Current(ctx)
 	if err != nil {
 		return err
 	}

@@ -91,8 +91,7 @@ func root(w http.ResponseWriter, r *http.Request) error {
 	w.Header().Set("Content-type", "text/html; charset=utf-8")
 	ctx := appengine.NewContext(r)
 	r.ParseForm()
-	debug := r.Form.Get("debug") == "true"
-	usr, err := user.Current(ctx, debug)
+	usr, err := user.Current(ctx)
 	if err != nil {
 		return err
 	}
@@ -138,7 +137,6 @@ func async(w http.ResponseWriter, r *http.Request) {
 
 func usrswitch(w http.ResponseWriter, r *http.Request) error {
 	ctx := appengine.NewContext(r)
-	debug := false
 
 	lockKey := datastore.NewKey(ctx, "lock", "lock", 0, nil)
 	lock := new(struct{ lock bool })
@@ -147,7 +145,7 @@ func usrswitch(w http.ResponseWriter, r *http.Request) error {
 		return errors.New(err.Error())
 	}
 
-	teachers, err := teacher.All(ctx, true, debug)
+	teachers, err := teacher.All(ctx, true)
 	if err != nil {
 		return err
 	}
@@ -158,7 +156,7 @@ func usrswitch(w http.ResponseWriter, r *http.Request) error {
 		}
 	}
 
-	teachers, err = teacher.All(ctx, false, debug)
+	teachers, err = teacher.All(ctx, false)
 	if err != nil {
 		return err
 	}
@@ -170,7 +168,7 @@ func usrswitch(w http.ResponseWriter, r *http.Request) error {
 		}
 	}
 
-	students, err := student.All(ctx, true, debug)
+	students, err := student.All(ctx, true)
 	if err != nil {
 		return err
 	}
@@ -181,7 +179,7 @@ func usrswitch(w http.ResponseWriter, r *http.Request) error {
 		}
 	}
 
-	students, err = student.All(ctx, false, debug)
+	students, err = student.All(ctx, false)
 	if err != nil {
 		return err
 	}
@@ -192,7 +190,7 @@ func usrswitch(w http.ResponseWriter, r *http.Request) error {
 			return err
 		}
 		newS := student.Student{Name: stdnt.Name, Email: stdnt.Email, Grade: stdnt.Grade}
-		err = newS.New(ctx, debug)
+		err = newS.New(ctx)
 		if err != nil {
 			return err
 		}

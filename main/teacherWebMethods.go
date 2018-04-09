@@ -34,8 +34,7 @@ func addTeacherMethods() {
 
 func newTeacher(w http.ResponseWriter, r *http.Request) error {
 	ctx := appengine.NewContext(r)
-	debug := r.Form.Get("debug") == "true"
-	curU, err := user.Current(ctx, debug)
+	curU, err := user.Current(ctx)
 	if err != nil {
 		return err
 	}
@@ -45,7 +44,7 @@ func newTeacher(w http.ResponseWriter, r *http.Request) error {
 		if err := decoder.Decode(newTchr); err != nil {
 			return errors.New(err.Error())
 		}
-		err := newTchr.New(ctx, debug)
+		err := newTchr.New(ctx)
 		return err
 	}
 	return errors.New(errors.AccessDenied)
@@ -53,8 +52,7 @@ func newTeacher(w http.ResponseWriter, r *http.Request) error {
 
 func editTeacher(w http.ResponseWriter, r *http.Request) error {
 	ctx := appengine.NewContext(r)
-	debug := r.Form.Get("debug") == "true"
-	curU, err := user.Current(ctx, debug)
+	curU, err := user.Current(ctx)
 	if err != nil {
 		return err
 	}
@@ -72,8 +70,7 @@ func editTeacher(w http.ResponseWriter, r *http.Request) error {
 
 func deleteTeacher(w http.ResponseWriter, r *http.Request) error {
 	ctx := appengine.NewContext(r)
-	debug := r.Form.Get("debug") == "true"
-	curU, err := user.Current(ctx, debug)
+	curU, err := user.Current(ctx)
 	if err != nil {
 		return err
 	}
@@ -93,10 +90,9 @@ func deleteTeacher(w http.ResponseWriter, r *http.Request) error {
 
 func getAllTeachers(w http.ResponseWriter, r *http.Request) error {
 	ctx := appengine.NewContext(r)
-	debug := r.Form.Get("debug") == "true"
 	current, _ := strconv.ParseBool(r.Form.Get("current"))
 
-	teachers, err := teacher.All(ctx, current, debug)
+	teachers, err := teacher.All(ctx, current)
 	if err != nil {
 		return err
 	}
@@ -113,8 +109,7 @@ func getAllTeachers(w http.ResponseWriter, r *http.Request) error {
 
 func getCurrentStudents(w http.ResponseWriter, r *http.Request) error {
 	ctx := appengine.NewContext(r)
-	debug := r.Form.Get("debug") == "true"
-	curU, err := user.Current(ctx, debug)
+	curU, err := user.Current(ctx)
 	if err != nil {
 		return err
 	}
@@ -125,12 +120,12 @@ func getCurrentStudents(w http.ResponseWriter, r *http.Request) error {
 
 		var block1 []*student.Student
 		var block2 []*student.Student
-		block1, err = tchr.StudentList(ctx, 0, debug)
+		block1, err = tchr.StudentList(ctx, 0)
 		if err != nil && err.(errors.Error).Message != student.StudentNotFound {
 			return err
 		}
 
-		block2, err = tchr.StudentList(ctx, 1, debug)
+		block2, err = tchr.StudentList(ctx, 1)
 		if err != nil && err.(errors.Error).Message != student.StudentNotFound {
 			return err
 		}
@@ -149,13 +144,12 @@ func getCurrentStudents(w http.ResponseWriter, r *http.Request) error {
 
 func getBlocks(w http.ResponseWriter, r *http.Request) error {
 	ctx := appengine.NewContext(r)
-	debug := r.Form.Get("debug") == "true"
-	curU, err := user.Current(ctx, debug)
+	curU, err := user.Current(ctx)
 	if err != nil {
 		return err
 	}
 	if curU.Teacher {
-		cTeacher, err := teacher.Current(ctx, false, debug)
+		cTeacher, err := teacher.Current(ctx, false)
 		if err != nil && err.(errors.Error).Message != teacher.TeacherNotFound {
 			return err
 		} else if err != nil && err.(errors.Error).Message == teacher.TeacherNotFound {
@@ -176,8 +170,7 @@ func getBlocks(w http.ResponseWriter, r *http.Request) error {
 
 func setBlocks(w http.ResponseWriter, r *http.Request) error {
 	ctx := appengine.NewContext(r)
-	debug := r.Form.Get("debug") == "true"
-	curU, err := user.Current(ctx, debug)
+	curU, err := user.Current(ctx)
 	if err != nil {
 		return err
 	}
@@ -187,7 +180,7 @@ func setBlocks(w http.ResponseWriter, r *http.Request) error {
 		if err := decoder.Decode(&blocks); err != nil {
 			return errors.New(err.Error())
 		}
-		cTchr, err := teacher.Current(ctx, false, debug)
+		cTchr, err := teacher.Current(ctx, false)
 		if err != nil && err.(errors.Error).Message == teacher.TeacherNotFound {
 			newTchr := new(teacher.Teacher)
 			newTchr.Email = curU.Email
@@ -195,7 +188,7 @@ func setBlocks(w http.ResponseWriter, r *http.Request) error {
 			newTchr.Current = false
 			newTchr.Block1 = blocks[0]
 			newTchr.Block2 = blocks[1]
-			err = newTchr.New(ctx, debug)
+			err = newTchr.New(ctx)
 			if err != nil {
 				return err
 			}
@@ -226,8 +219,7 @@ func setBlocks(w http.ResponseWriter, r *http.Request) error {
 
 func addStudentToClass(w http.ResponseWriter, r *http.Request) error {
 	ctx := appengine.NewContext(r)
-	debug := r.Form.Get("debug") == "true"
-	curU, err := user.Current(ctx, debug)
+	curU, err := user.Current(ctx)
 	if err != nil {
 		return err
 	}
@@ -246,7 +238,7 @@ func addStudentToClass(w http.ResponseWriter, r *http.Request) error {
 			return errors.New(err.Error())
 		}
 
-		curT, err := teacher.Current(ctx, false, debug)
+		curT, err := teacher.Current(ctx, false)
 		if err != nil {
 			return err
 		}
@@ -262,7 +254,7 @@ func addStudentToClass(w http.ResponseWriter, r *http.Request) error {
 		} else {
 			stdntTchr = &stdnt.Teacher2
 		}
-		prevTchr, err := teacher.WithEmail(ctx, *stdntTchr, false, debug)
+		prevTchr, err := teacher.WithEmail(ctx, *stdntTchr, false)
 		prevOpen := true
 		if err != nil && err.(errors.Error).Message != teacher.TeacherNotFound {
 			return err
@@ -324,7 +316,7 @@ func addStudentToClass(w http.ResponseWriter, r *http.Request) error {
 			return err
 		}
 
-		stdntUsr, err := user.WithEmail(ctx, stdnt.Email, false)
+		stdntUsr, err := user.WithEmail(ctx, stdnt.Email)
 		if err != nil {
 			return err
 		}
@@ -343,7 +335,7 @@ func addStudentToClass(w http.ResponseWriter, r *http.Request) error {
 		}
 
 		if prevTchr != nil {
-			tchrUsr, err := user.WithEmail(ctx, prevTchr.Email, false)
+			tchrUsr, err := user.WithEmail(ctx, prevTchr.Email)
 			if err != nil {
 				return err
 			}
@@ -370,8 +362,7 @@ func addStudentToClass(w http.ResponseWriter, r *http.Request) error {
 
 func removeFromClass(w http.ResponseWriter, r *http.Request) error {
 	ctx := appengine.NewContext(r)
-	debug := r.Form.Get("debug") == "true"
-	curU, err := user.Current(ctx, debug)
+	curU, err := user.Current(ctx)
 	if err != nil {
 		return err
 	}
@@ -395,7 +386,7 @@ func removeFromClass(w http.ResponseWriter, r *http.Request) error {
 			return err
 		}
 
-		usr, err := user.Current(ctx, debug)
+		usr, err := user.Current(ctx)
 		if err != nil {
 			return err
 		}
@@ -413,7 +404,7 @@ func removeFromClass(w http.ResponseWriter, r *http.Request) error {
 			return errors.New(errors.AccessDenied)
 		}
 
-		curT, err := teacher.Current(ctx, false, debug)
+		curT, err := teacher.Current(ctx, false)
 		if err != nil {
 			return err
 		}
@@ -436,7 +427,7 @@ func removeFromClass(w http.ResponseWriter, r *http.Request) error {
 			return err
 		}
 
-		stdntUsr, err := user.WithEmail(ctx, stdnt.Email, false)
+		stdntUsr, err := user.WithEmail(ctx, stdnt.Email)
 		if err != nil {
 			return err
 		}
