@@ -145,18 +145,20 @@ func usrswitch(w http.ResponseWriter, r *http.Request) error {
 		return errors.New(err.Error())
 	}
 
-	teachers, err := teacher.All(ctx, true)
+	curTchrs, err := teacher.All(ctx, true)
 	if err != nil {
 		return err
 	}
-	for _, tchr := range teachers {
-		err = tchr.Delete(ctx)
+	for _, tchr := range curTchrs {
+		tchr.Block1, tchr.Block2 = teacher.Block{}, teacher.Block{}
+		tchr.Current = false
+		err = tchr.Edit(ctx)
 		if err != nil {
 			return err
 		}
 	}
 
-	teachers, err = teacher.All(ctx, false)
+	teachers, err := teacher.All(ctx, false)
 	if err != nil {
 		return err
 	}
@@ -168,29 +170,26 @@ func usrswitch(w http.ResponseWriter, r *http.Request) error {
 		}
 	}
 
-	students, err := student.All(ctx, true)
+	curStdnts, err := student.All(ctx, true)
 	if err != nil {
 		return err
 	}
-	for _, stdnt := range students {
-		err = stdnt.Delete(ctx)
+	for _, stdnt := range curStdnts {
+		stdnt.Teacher1, stdnt.Teacher2 = "", ""
+		stdnt.Current = false
+		err = stdnt.Edit(ctx)
 		if err != nil {
 			return err
 		}
 	}
 
-	students, err = student.All(ctx, false)
+	students, err := student.All(ctx, false)
 	if err != nil {
 		return err
 	}
 	for _, stdnt := range students {
 		stdnt.Current = true
 		err = stdnt.Edit(ctx)
-		if err != nil {
-			return err
-		}
-		newS := student.Student{Name: stdnt.Name, Email: stdnt.Email, Grade: stdnt.Grade}
-		err = newS.New(ctx)
 		if err != nil {
 			return err
 		}

@@ -515,6 +515,17 @@ func importUsers(w http.ResponseWriter, r *http.Request) error {
 				stdnt.Delete(ctx)
 			}
 		}
+		curStdnts, err := student.All(ctx, true)
+		if err != nil {
+			return err
+		}
+
+		for _, stdnt := range curStdnts {
+			if usr, ok := newUsers[stdnt.Email]; !ok || usr.Teacher {
+				stdnt.Delete(ctx)
+			}
+		}
+		
 		if userList, err = user.All(ctx); err != nil {
 			return err
 		}
