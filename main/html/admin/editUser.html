@@ -19,6 +19,17 @@
           </md-item-template>
           <md-not-found>No User Found</md-not-found>
         </md-autocomplete>
+        <md-input-container>
+          <label>Name</label>
+          <input ng-model='controller.selectedUser.Name' type="text" required>
+        </md-input-container>
+        <md-input-container>
+          <label>Email</label>
+          <input ng-model='controller.selectedUser.Email' type="text" required>
+        </md-input-container>
+        <md-input-container class="md-block">
+          <md-checkbox ng-model="controller.selectedUser.Teacher">Is Teacher</md-checkbox>
+        </md-input-container>
         <md-input-container class="md-block">
           <md-checkbox ng-model="controller.selectedUser.Admin" required>Is Admin</md-checkbox>
         </md-input-container>
