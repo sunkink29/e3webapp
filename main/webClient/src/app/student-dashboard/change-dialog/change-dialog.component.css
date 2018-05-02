@@ -1,0 +1,16 @@
+.table-container {
+    margin: 1rem 2rem 1rem;
+    padding: 0rem 2rem 2rem;
+}
+
+.mat-cell {
+    overflow: visible;
+}
+
+mat-dialog-content {
+    font-family: Roboto,"Helvetica Neue",sans-serif;
+}
+
+mat-dialog-actions {
+    float: right;
+}
