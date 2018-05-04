@@ -2,15 +2,16 @@ runtime: go
 api_version: go1
 
 handlers:
+
 - url: /css
   static_dir: css
 
 - url: /js
   static_dir: js
 
-- url: /(.*\.(js))$
-  static_files: js/\1
-  upload: /.*\.(gif|png|jpg)$
+# - url: /firebase-messaging-sw.*
+#   static_files: js/.*\.(js)$
+#   upload: /.*\.(js)$
   
 - url: /auth
   script: _go_app
@@ -19,7 +20,25 @@ handlers:
   script: _go_app
   login: admin
 
-- url: /.*
+- url: /api/.*
   script: _go_app
+  login: required
+
+- url: /app/.*
+  script: _go_app
+  login: required
+  auth_fail_action: redirect
+
+- url: /(.*\.ico)
+  static_files: webClient/dist/\1
+  upload: webClient/dist/(.*\.ico)
+
+- url: /(.*\.js)
+  static_files: webClient/dist/\1
+  upload: webClient/dist/(.*\.js)
+
+- url: /.*
+  static_files: webClient/dist/index.html
+  upload: webClient/dist/index.html
   login: required
   auth_fail_action: redirect

@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { Observable } from 'rxjs/Observable';
 import { ActivatedRoute, Router, ParamMap } from '@angular/router';
 import { MatDialog, MatDialogRef } from '@angular/material';
-import 'rxjs/add/operator/map';
+import { map, filter } from 'rxjs/operators';
 
 
 import { Teacher, Block} from '../../Interfaces';
@@ -16,15 +16,12 @@ import { ChangeDialogComponent } from '../change-dialog/change-dialog.component'
 })
 export class StudentDashboardComponent implements OnInit {
 
-  indexT = 0
-  indexB = 1;
+  index = 0
   curDisplayedColumns = ['days', 'name', 'roomNumber', 'status', 'subject', 'description', 'size'];
   nextDisplayedColumns = ['days', 'name', 'roomNumber', 'status', 'subject', 'description', 'size', 'changeButton'];
 
   curTeachers$: Observable<Teacher[]>;
   nextTeachers$: Observable<Teacher[]>;
-
-  Math = Math;
 
   blockID: number;
 
@@ -43,29 +40,27 @@ export class StudentDashboardComponent implements OnInit {
         let index = url.findIndex((value) => value.toString() == 'change')
         if (index != -1) {
           dialogRef = this.dialog.open(ChangeDialogComponent, {
-            height: '30rem',
-            width: '80rem',
+            height: '70%',
+            width: '80%',
             data: this.blockID
           });
-          dialogRef.afterClosed().subscribe(teacherID => {
-            console.log(teacherID);
+          dialogRef.afterClosed().subscribe(email => {
+            if (email != null) {
+              this.teacherService.setStudentClass(email, this.blockID);
+            }
             this.router.navigate(['/student']);
           });
         }
       });
     },);
-    this.route.paramMap.map((params: ParamMap) => params.get('id')).subscribe(
+    this.route.paramMap.pipe(map((params: ParamMap) => params.get('id'))).subscribe(
       id => {this.blockID = +id}, () => {})
   }
 
-  getIndexT() {
-    this.indexT++;
-    return this.indexT % 2;
+  getIndex(increase: boolean) {
+    if (increase) {
+      this.index++;
+    }
+    return this.index % 2;
   }
-
-  getIndexB() {
-    this.indexB++;
-    return this.indexB % 4;
-  }
-
 }
