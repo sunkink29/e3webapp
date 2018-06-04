@@ -1,0 +1,33 @@
+<form>
+  <h2 mat-dialog-title>Edit Class</h2>
+  <mat-dialog-content *ngIf="(block$ | async) as block" class="inputContainer">
+    <div class="rowContainer">
+      <mat-form-field appearance="standard" class="input">
+        <mat-label for="description">Description</mat-label>
+        <input matInput type="text" id="description" name="description" 
+          [(ngModel)]="block.Description">
+      </mat-form-field>
+      <mat-form-field appearance="standard" class="inputField">
+        <mat-label for="subject">Subject</mat-label>
+        <input matInput type="text" id="subject" name="subject" 
+          [(ngModel)]="block.Subject">
+      </mat-form-field>
+      <mat-form-field appearance="standard" class="inputField">
+        <mat-label for="roomNumber">RoomNumber</mat-label>
+        <input matInput type="number" id="roomNumber" name="roomNumber" 
+          [(ngModel)]="block.RoomNumber">
+      </mat-form-field>
+      <mat-form-field appearance="standard" class="inputField">
+        <mat-label for="maxSize">Max Size</mat-label>
+        <input matInput type="text" id="maxSize" name="maxSize" 
+          [(ngModel)]="block.MaxSize">
+      </mat-form-field>
+    </div>
+    <mat-checkbox [(ngModel)]="block.BlockOpen" name="blockOpen" 
+      class="inputField">Is Open</mat-checkbox>
+  </mat-dialog-content>
+  <mat-dialog-actions>
+    <button mat-raised-button mat-dialog-close="block">Submit</button>
+    <button mat-raised-button mat-dialog-close>Cancel</button>
+  </mat-dialog-actions>
+</form>

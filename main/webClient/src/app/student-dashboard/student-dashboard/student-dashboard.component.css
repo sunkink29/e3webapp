@@ -1,5 +1,5 @@
 .table-container {
-    margin: 2rem 4rem;
+    margin: 2rem 2rem;
     padding: 0rem 2rem 2rem;
   }
   
@@ -9,7 +9,6 @@
   }
 
   .table-container h2 {
-    font-family: Roboto,"Helvetica Neue",sans-serif;;
     padding: 1rem 1rem 0rem 1rem;
   }
 

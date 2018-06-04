@@ -4,7 +4,7 @@
 
     <ng-container matColumnDef="days">
       <mat-header-cell *matHeaderCellDef></mat-header-cell>
-      <mat-cell *matCellDef="let teacher"> {{getIndex(true)?'Tue/Wed': 'Thr/Fri'}} </mat-cell>
+      <mat-cell *matCellDef="let teacher; let i = index;"> {{!i?'Tue/Wed': 'Thr/Fri'}} </mat-cell>
     </ng-container>
 
     <ng-container matColumnDef="name">
@@ -14,27 +14,27 @@
 
     <ng-container matColumnDef="roomNumber">
       <mat-header-cell *matHeaderCellDef> Room Number </mat-header-cell>
-      <mat-cell *matCellDef="let teacher"> {{teacher.Blocks[1-getIndex(false)].RoomNumber}} </mat-cell>
+      <mat-cell *matCellDef="let teacher; let i = index;"> {{teacher.Blocks[i].RoomNumber}} </mat-cell>
     </ng-container>
 
     <ng-container matColumnDef="status">
       <mat-header-cell *matHeaderCellDef> Status </mat-header-cell>
-      <mat-cell *matCellDef="let teacher"> {{teacher.Blocks[1-getIndex(false)].BlockOpen? 'Open': 'Closed'}} </mat-cell>
+      <mat-cell *matCellDef="let teacher; let i = index;"> {{teacher.Blocks[i].BlockOpen? 'Open': 'Closed'}} </mat-cell>
     </ng-container>
 
     <ng-container matColumnDef="subject">
       <mat-header-cell *matHeaderCellDef> Subject </mat-header-cell>
-      <mat-cell *matCellDef="let teacher"> {{teacher.Blocks[1-getIndex(false)].Subject}} </mat-cell>
+      <mat-cell *matCellDef="let teacher; let i = index;"> {{teacher.Blocks[i].Subject}} </mat-cell>
     </ng-container>
     
     <ng-container matColumnDef="description">
       <mat-header-cell *matHeaderCellDef> Description </mat-header-cell>
-      <mat-cell *matCellDef="let teacher"> {{teacher.Blocks[1-getIndex(false)].Description}} </mat-cell>
+      <mat-cell *matCellDef="let teacher; let i = index;"> {{teacher.Blocks[i].Description}} </mat-cell>
     </ng-container>
 
     <ng-container matColumnDef="size">
       <mat-header-cell *matHeaderCellDef> Current / Max size </mat-header-cell>
-      <mat-cell *matCellDef="let teacher"> {{teacher.Blocks[1-getIndex(false)].CurSize+' / '+teacher.Blocks[1-getIndex(false)].MaxSize}} </mat-cell>
+      <mat-cell *matCellDef="let teacher; let i = index;"> {{teacher.Blocks[i].CurSize+' / '+teacher.Blocks[i].MaxSize}} </mat-cell>
     </ng-container>
 
     <mat-header-row *matHeaderRowDef="curDisplayedColumns"></mat-header-row>
@@ -48,7 +48,7 @@
 
       <ng-container matColumnDef="days">
         <mat-header-cell *matHeaderCellDef></mat-header-cell>
-        <mat-cell *matCellDef="let teacher"> {{getIndex(true)?'Tue/Wed': 'Thr/Fri'}} </mat-cell>
+        <mat-cell *matCellDef="let teacher; let i = index;"> {{!i?'Tue/Wed': 'Thr/Fri'}} </mat-cell>
       </ng-container>
 
       <ng-container matColumnDef="name">
@@ -58,33 +58,33 @@
   
       <ng-container matColumnDef="roomNumber">
         <mat-header-cell *matHeaderCellDef> Room Number </mat-header-cell>
-        <mat-cell *matCellDef="let teacher"> {{teacher.Blocks[1-getIndex(false)].RoomNumber}} </mat-cell>
+        <mat-cell *matCellDef="let teacher; let i = index;"> {{teacher.Blocks[i].RoomNumber}} </mat-cell>
       </ng-container>
   
       <ng-container matColumnDef="status">
         <mat-header-cell *matHeaderCellDef> Status </mat-header-cell>
-        <mat-cell *matCellDef="let teacher"> {{teacher.Blocks[1-getIndex(false)].BlockOpen? 'Open': 'Closed'}} </mat-cell>
+        <mat-cell *matCellDef="let teacher; let i = index;"> {{teacher.Blocks[i].BlockOpen? 'Open': 'Closed'}} </mat-cell>
       </ng-container>
   
       <ng-container matColumnDef="subject">
         <mat-header-cell *matHeaderCellDef> Subject </mat-header-cell>
-        <mat-cell *matCellDef="let teacher"> {{teacher.Blocks[1-getIndex(false)].Subject}} </mat-cell>
+        <mat-cell *matCellDef="let teacher; let i = index;"> {{teacher.Blocks[i].Subject}} </mat-cell>
       </ng-container>
       
       <ng-container matColumnDef="description">
         <mat-header-cell *matHeaderCellDef> Description </mat-header-cell>
-        <mat-cell *matCellDef="let teacher"> {{teacher.Blocks[1-getIndex(false)].Description}} </mat-cell>
+        <mat-cell *matCellDef="let teacher; let i = index;"> {{teacher.Blocks[i].Description}} </mat-cell>
       </ng-container>
   
       <ng-container matColumnDef="size">
         <mat-header-cell *matHeaderCellDef> Current / Max size </mat-header-cell>
-        <mat-cell *matCellDef="let teacher"> {{teacher.Blocks[1-getIndex(false)].CurSize+' / '+teacher.Blocks[1-getIndex(false)].MaxSize}} </mat-cell>
+        <mat-cell *matCellDef="let teacher; let i = index;"> {{teacher.Blocks[i].CurSize+' / '+teacher.Blocks[i].MaxSize}} </mat-cell>
       </ng-container>
 
       <ng-container matColumnDef="changeButton">
         <mat-header-cell *matHeaderCellDef></mat-header-cell>
-        <mat-cell *matCellDef="let teacher"><button mat-raised-button [routerLink]="'change/'+(1-getIndex(false))" 
-          [disabled]="!teacher.Blocks[1-getIndex(false)].BlockOpen">Change Class</button></mat-cell>
+        <mat-cell *matCellDef="let teacher; let i = index;"><button mat-raised-button [routerLink]="'/student/change/'+(i)" 
+          [disabled]="!teacher.Blocks[i].BlockOpen">Change Class</button></mat-cell>
       </ng-container>
   
       <mat-header-row *matHeaderRowDef="nextDisplayedColumns"></mat-header-row>

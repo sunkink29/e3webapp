@@ -1,0 +1,45 @@
+<mat-tab-group>
+  <mat-tab label="Next">
+    <div *ngFor="let students of nextStudents$; index as i" class="mat-elevation-z4 table-container">
+      <p class="table-header">{{i == 0? 'Tue / Wed': 'Thu / Fri'}}</p>
+      <mat-table [dataSource]="students">
+
+        <ng-container matColumnDef="student">
+          <mat-header-cell *matHeaderCellDef></mat-header-cell>
+          <mat-cell *matCellDef="let student"> {{student.Name}} | {{student.Grade}} </mat-cell>
+        </ng-container>
+    
+        <ng-container matColumnDef="button">
+          <mat-header-cell *matHeaderCellDef></mat-header-cell>
+          <mat-cell *matCellDef="let student"><button mat-raised-button (click)="removeStudent(student.Email, i)">Remove Student</button></mat-cell>
+        </ng-container>
+
+        <mat-header-row *matHeaderRowDef="nextDisplayedColumns"></mat-header-row>
+        <mat-row *matRowDef="let row; columns: nextDisplayedColumns"></mat-row>
+      </mat-table>
+      <div class="buttons-container">
+        <div class="button-container">
+          <button mat-raised-button [routerLink]="'/teacher/add/' + i" class="table-button">Add Student</button>
+        </div>
+        <div class="button-container">
+            <button mat-raised-button [routerLink]="'/teacher/edit/' + i" class="table-button">Edit Class</button>
+        </div>
+      </div>
+    </div>
+  </mat-tab>
+  <mat-tab label="Current">
+    <div *ngFor="let students of curStudents$; index as i" class="mat-elevation-z4 table-container">
+      <p class="table-header">{{index == 0? 'Tue / Wed': 'Thu / Fri'}}</p>
+      <mat-table [dataSource]="students">
+
+        <ng-container matColumnDef="student">
+          <mat-header-cell *matHeaderCellDef></mat-header-cell>
+          <mat-cell *matCellDef="let student"> {{student.Name}} | {{student.Grade}} </mat-cell>
+        </ng-container>
+
+        <mat-header-row *matHeaderRowDef="curDisplayedColumns"></mat-header-row>
+        <mat-row *matRowDef="let row; columns: curDisplayedColumns"></mat-row>
+      </mat-table>
+    </div>
+  </mat-tab>
+</mat-tab-group>

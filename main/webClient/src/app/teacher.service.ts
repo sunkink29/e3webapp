@@ -1,15 +1,15 @@
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs/Observable';
-import { of } from 'rxjs/observable/of';
-import { Observer } from 'rxjs/Observer';
+import { Observable ,  of ,  Observer ,  Subscription, OperatorFunction, observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { HttpClient } from '@angular/common/http';
-import 'rxjs/add/operator/map'
 
 import { Teacher, Block } from './Interfaces'
+import { DataContainer, getHttpCacheObervable } from './HttpCacheObervable'
 
-interface RawTeacher {
+class RawTeacher {
 	ID: string
-	Email, Name: string
+  Email: string
+  Name: string
   Block1 : Block
   Block2 : Block
 	Current: boolean
@@ -18,61 +18,129 @@ interface RawTeacher {
 @Injectable()
 export class TeacherService {
 
-  curClassesObservable = new Observable<Teacher[]>((observer) => {
-    if (this.curClasses.length == 0) {
-      this.http.get<RawTeacher[]>("/api/student/getteachers?current=true").
-        map(value => this.mapRawTeacherToTeacher(value)).
-        subscribe((teachers) => {
-          this.curClasses = teachers;
-          observer.next(this.curClasses);
-        }, (err) => this.log(err));
-    } else {
-      observer.next(this.curClasses);
-    }
-  });
-  curClasses: Teacher[] = new Array<Teacher>();
+  private curClassesObservable = getHttpCacheObervable<RawTeacher[], Teacher[], Teacher[],Teacher[]>(
+    this.http, new DataContainer<Teacher[], Teacher[]>(), () => {},
+    (observer, teachers) => observer.next(teachers),
+    (teachers, dataContainer) => dataContainer.data = teachers,
+    () => {}, "/api/student/getteachers?current=true", CUR_TEACHER_DATA, 
+    map(value => this.mapRawTeacherToTeacher(value))
+  )
 
-  nextClassesObservable = new Observable<Teacher[]>((observer) => {
-    this.nextClassesObserver = observer;
-    if (this.nextClasses.length == 0) {
-      this.http.get<RawTeacher[]>("/api/student/getteachers?current=false").
-        map(value => this.mapRawTeacherToTeacher(value)).
-        subscribe((teachers) => {
-          this.nextClasses = teachers;
-          observer.next(this.nextClasses);
-        }, (err) => this.log(err));
-    } else {
-      observer.next(this.nextClasses);
+  private getNextFuncs() {
+    let subscription: Subscription;
+    const classRef = this;
+    function updateClasses(observer, data: string[]) {
+      if (subscription) {
+        subscription.unsubscribe();
+      }
+      subscription = classRef.getAllClasses().subscribe(() => {
+        let output = data.map(email => classRef.getClass(email));
+        observer.next(output);
+      });
     }
-    return {unsubscribe() {this.nextClassesObserver = null}}
-  });
-  nextClassesObserver: Observer<Teacher[]>;
-  nextClasses: Teacher[] = new Array<Teacher>();
+    return {updateClasses, unsubscribe() {subscription.unsubscribe()}}
+  }
+  private nextFuncs = this.getNextFuncs();
+  private nextClassesContainer = new DataContainer<string[], Teacher[]>();
+  private nextClassesObservable = getHttpCacheObervable<RawTeacher[], Teacher[], string[],Teacher[]>(
+    this.http, this.nextClassesContainer, 
+    (observer, teachers) => this.nextFuncs.updateClasses(observer, teachers), () => {},
+    (teachers, dataContainer) => {
+      dataContainer.observers.forEach(observer => observer.observer.next(teachers));
+      dataContainer.data = teachers.map(value => value.Email)}, 
+    () => this.nextFuncs.unsubscribe(), "/api/student/getteachers?current=false",
+    NEXT_TEACHER_DATA, map(value => this.mapRawTeacherToTeacher(value))
+  )
 
-  allClassesObservable = new Observable<Teacher[]>((observer) => {
-    var list = this.allClassesObservers;
-    list.push(observer)
-    if (this.allClasses.length == 0) {
-      this.http.get<RawTeacher[]>("/api/teacher/getall?current=false").
-        map(value => this.mapRawTeacherToTeacher(value)).
-        subscribe(teachers => this.updateAllClassesObservers(teachers),
-        (err) => this.log(err));
-    } else {
-      observer.next(this.allClasses)
-    }
-    return {unsubscribe() {list.splice(list.indexOf(observer),1)}}
-  });
-  allClassesObservers: Observer<Teacher[]>[] = new Array<Observer<Teacher[]>>();
-  allClasses: Teacher[] = new Array<Teacher>();
+  private allClassesContainer = new DataContainer<Teacher[], Teacher[]>();
+  private allClassesObservable = getHttpCacheObervable<RawTeacher[], Teacher[], Teacher[],Teacher[]>(
+    this.http, this.allClassesContainer, () => {},
+    (observer, teachers) => observer.next(teachers),
+    (teachers, dataContainer) => dataContainer.data = teachers, 
+    () => {},"/api/teacher/getall?current=false", All_TEACHER_DATA, 
+    map(value => this.mapRawTeacherToTeacher(value))
+  )
+
+  private blockContainer = new DataContainer<Block[], Block>();
+  private makeNextBlockObservable(index: number): Observable<Block> {
+    return getHttpCacheObervable<Block[],Block,Block[], Block[]>(
+      this.http, this.blockContainer, () => {},
+      (observer, blocks) => observer.next(blocks[index]), 
+      (blocks, blockContainer) => blockContainer.data = blocks,
+      () => {}, "/api/teacher/getblocks", NEXT_BLOCK_DATA
+    )
+  }
+  private nextBlockObservable = [
+    this.makeNextBlockObservable(0),
+    this.makeNextBlockObservable(1)
+  ]
+
+  // private curClassesObservableOld = new Observable<Teacher[]>((observer) => {
+  //   if (this.curClasses.length == 0) {
+  //     // this.http.get<RawTeacher[]>("/api/student/getteachers?current=true").
+  //     of(CUR_TEACHER_DATA).pipe(
+  //       map(value => this.mapRawTeacherToTeacher(value))
+  //     ).subscribe(teachers => {
+  //         this.curClasses = teachers;
+  //         observer.next(teachers);
+  //       }, (err) => this.log(err));
+  //   } else {
+  //     observer.next(this.curClasses)
+  //   }
+  // });
+  // private curClasses: Teacher[] = new Array<Teacher>();
+
+  // private nextClassesObservableOld = new Observable<Teacher[]>((observer) => {
+  //   let subscription: Subscription;
+  //   const classRef = this;
+  //   function updateClasses() {
+  //     subscription = classRef.getAllClasses().subscribe(() => {
+  //       let output = classRef.nextClasses.map(email => classRef.getClass(email));
+  //       observer.next(output);
+  //     });
+  //   }
+
+  //   if (this.nextClasses.length == 0) {
+  //     // this.http.get<RawTeacher[]>("/api/student/getteachers?current=false").
+  //     of(NEXT_TEACHER_DATA).pipe(
+  //       map(value => this.mapRawTeacherToTeacher(value))
+  //     ).subscribe((teachers) => {
+  //         this.nextClasses = teachers.map(value => value.Email);
+  //         observer.next(teachers);
+  //         updateClasses();
+  //       }, (err) => this.log(err));
+  //   } else {
+  //     updateClasses();
+  //   }
+  //   return {unsubscribe() {subscription.unsubscribe()}}
+  // });
+  // private nextClasses: string[] = new Array<string>();
+
+  // private allClassesObservableOld = new Observable<Teacher[]>((observer) => {
+  //   var list = this.allClassesObservers;
+  //   list.push(observer)
+  //   if (this.allClasses.length == 0) {
+  //     // this.http.get<RawTeacher[]>("/api/teacher/getall?current=false").
+  //     of(All_TEACHER_DATA).pipe(
+  //       map(value => this.mapRawTeacherToTeacher(value))
+  //     ).subscribe(teachers => this.updateAllClassesObservers(teachers),
+  //       (err) => this.log(err));
+  //   } else {
+  //     observer.next(this.allClasses)
+  //   }
+  //   return {unsubscribe() {list.splice(list.indexOf(observer),1)}}
+  // });
+  // private allClasses: Teacher[] = new Array<Teacher>();
+  // private allClassesObservers: Observer<Teacher[]>[] = new Array<Observer<Teacher[]>>();
 
   constructor(private http: HttpClient) { }
 
   private updateAllClassesObservers(teachers: Teacher[]) {
-    this.allClasses = teachers;
-    this.allClassesObservers.forEach(observer => observer.next(teachers));
+    this.allClassesContainer.data = teachers;
+    this.allClassesContainer.next();
   }
 
-  private mapRawTeacherToTeacher(teachers: RawTeacher[]): Teacher[] {
+  mapRawTeacherToTeacher(teachers: RawTeacher[]): Teacher[] {
     let newTeachers: Teacher[] = new Array<Teacher>();
     teachers.forEach( value => {
       let teacher: Teacher;
@@ -98,29 +166,36 @@ export class TeacherService {
     return this.nextClassesObservable;
   }
 
-  nextContainsClass(Email: string): boolean {
-    return this.nextClasses.findIndex(value => value.Email == Email) != -1;
-  }
-
   getAllClasses(): Observable<Teacher[]> {
     return this.allClassesObservable;
   }
 
   getClass(Email: string): Teacher {
-    return this.allClasses.find(value => value.Email == Email)
+    return this.allClassesContainer.data.find(value => value.Email == Email)
   }
 
-  setStudentClass(Email: string, block: number) {
-    let last = this.getClass(this.nextClasses[block].Email)
+  setStudentClass(email: string, block: number) {
+    if (block < 0 || block >= this.nextClassesContainer.data.length) {return}
+
+    let last = this.getClass(this.nextClassesContainer.data[block]);
     if (last != undefined) {
       last.Blocks[block].CurSize--;
     }
-    let next = this.getClass(Email);
+    let next = this.getClass(email);
     next.Blocks[block].CurSize++;
-    this.nextClasses[block] = next;
-    this.nextClassesObserver.next(this.nextClasses);
+    this.nextClassesContainer.data[block] = email;
+    this.updateAllClassesObservers(this.allClassesContainer.data);
     this.http.post("/api/student/setteacher", {ID: next.ID, Block: block}).
       subscribe(() => {}, (err) => this.log(err));
+  }
+
+  getNextBlock(blockID: number): Observable<Block> {
+    return this.nextBlockObservable[blockID];
+  }
+  
+  setNextBlock(blockID: number, block: Block) {
+    this.blockContainer.data[blockID] = block;
+    this.blockContainer.next();
   }
 
   log(output) {
@@ -129,56 +204,71 @@ export class TeacherService {
 
 }
 
-const CUR_TEACHER_DATA: Teacher[] = [
-  {ID: "1", Email: 'email1', Name: "teacher1", Blocks: [
+const CUR_TEACHER_DATA: RawTeacher[] = [
+  {ID: "1", Email: 'email1', Name: "teacher1", Block1:
     {Subject: "subject1", Description: "description1", CurSize: 1, MaxSize: 10, RoomNumber: 123, BlockOpen: true},
+    Block2:
     {Subject: "subject2", Description: "description2", CurSize: 0, MaxSize: 10, RoomNumber: 123, BlockOpen: true}
-  ], Current: true},
-  {ID: "2", Email: 'email2', Name: "teacher2", Blocks: [
+  , Current: true},
+  {ID: "2", Email: 'email2', Name: "teacher2", Block1:
     {Subject: "subject3", Description: "description3", CurSize: 5, MaxSize: 5, RoomNumber: 567, BlockOpen: true},
+    Block2:
     {Subject: "subject4", Description: "description4", CurSize: 5, MaxSize: 5, RoomNumber: 567, BlockOpen: true}
-  ], Current: true}
+  , Current: true}
 ]
 
-const NEXT_TEACHER_DATA: Teacher[] = [
-  {ID: "3", Email: 'email3', Name: "teacher3", Blocks: [
+const NEXT_TEACHER_DATA: RawTeacher[] = [
+  {ID: "3", Email: 'email3', Name: "teacher3", Block1:
     {Subject: "subject5", Description: "description5", CurSize: 1, MaxSize: 10, RoomNumber: 123, BlockOpen: true},
+    Block2:
     {Subject: "subject6", Description: "description6", CurSize: 0, MaxSize: 10, RoomNumber: 123, BlockOpen: true}
-  ], Current: false},
-  {ID: "4", Email: 'email4', Name: "teacher4", Blocks: [
+  , Current: false},
+  {ID: "4", Email: 'email4', Name: "teacher4", Block1:
     {Subject: "subject7", Description: "description7", CurSize: 5, MaxSize: 5, RoomNumber: 567, BlockOpen: true},
+    Block2:
     {Subject: "subject8", Description: "description8", CurSize: 5, MaxSize: 5, RoomNumber: 567, BlockOpen: true}
-  ], Current: false}
+  , Current: false}
 ]
 
-const All_TEACHER_DATA: Teacher[] = [
-  {ID: "1", Email: 'email1', Name: "teacher1", Blocks: [
-    {Subject: "subject1", Description: "description1", CurSize: 0, MaxSize: 10, RoomNumber: 123, BlockOpen: true},
+const All_TEACHER_DATA: RawTeacher[] = [
+  {ID: "1", Email: 'email1', Name: "teacher1", Block1:
+    {Subject: "subject1", Description: "description1", CurSize: 1, MaxSize: 10, RoomNumber: 123, BlockOpen: true},
+    Block2:
     {Subject: "subject2", Description: "description2", CurSize: 0, MaxSize: 10, RoomNumber: 123, BlockOpen: true}
-  ], Current: true},
-  {ID: "2", Email: 'email2', Name: "teacher2", Blocks: [
+  , Current: true},
+  {ID: "2", Email: 'email2', Name: "teacher2", Block1:
     {Subject: "subject3", Description: "description3", CurSize: 5, MaxSize: 5, RoomNumber: 567, BlockOpen: true},
+    Block2:
     {Subject: "subject4", Description: "description4", CurSize: 5, MaxSize: 5, RoomNumber: 567, BlockOpen: true}
-  ], Current: true},
-  {ID: "3", Email: 'email3', Name: "teacher3", Blocks: [
+  , Current: true},
+  {ID: "3", Email: 'email3', Name: "teacher3", Block1:
     {Subject: "subject5", Description: "description5", CurSize: 1, MaxSize: 10, RoomNumber: 123, BlockOpen: true},
+    Block2:
     {Subject: "subject6", Description: "description6", CurSize: 0, MaxSize: 10, RoomNumber: 123, BlockOpen: true}
-  ], Current: false},
-  {ID: "4", Email: 'email4', Name: "teacher4", Blocks: [
+  , Current: false},
+  {ID: "4", Email: 'email4', Name: "teacher4", Block1:
     {Subject: "subject7", Description: "description7", CurSize: 5, MaxSize: 5, RoomNumber: 567, BlockOpen: true},
+    Block2:
     {Subject: "subject8", Description: "description8", CurSize: 5, MaxSize: 5, RoomNumber: 567, BlockOpen: true}
-  ], Current: false},
-  {ID: "5", Email: 'email5', Name: "teacher5", Blocks: [
+  , Current: false},
+  {ID: "5", Email: 'email5', Name: "teacher5", Block1:
     {Subject: "subject7", Description: "description7", CurSize: 5, MaxSize: 5, RoomNumber: 567, BlockOpen: true},
+    Block2:
     {Subject: "subject8", Description: "description8", CurSize: 5, MaxSize: 5, RoomNumber: 567, BlockOpen: true}
-  ], Current: false},
-  {ID: "6", Email: 'email6', Name: "teacher6", Blocks: [
+  , Current: false},
+  {ID: "6", Email: 'email6', Name: "teacher6", Block1:
     {Subject: "subject7", Description: "description7", CurSize: 5, MaxSize: 5, RoomNumber: 567, BlockOpen: true},
+    Block2:
     {Subject: "subject8", Description: "description8", CurSize: 5, MaxSize: 5, RoomNumber: 567, BlockOpen: true}
-  ], Current: false},
-  {ID: "7", Email: 'email7', Name: "teacher7", Blocks: [
+  , Current: false},
+  {ID: "7", Email: 'email7', Name: "teacher7", Block1:
     {Subject: "subject7", Description: "description7", CurSize: 5, MaxSize: 5, RoomNumber: 567, BlockOpen: true},
+    Block2:
     {Subject: "subject8", Description: "description8", CurSize: 5, MaxSize: 5, RoomNumber: 567, BlockOpen: true}
-  ], Current: false},
-  
+  , Current: false},
+]
+
+const NEXT_BLOCK_DATA: Block[] = [
+  {Subject: "subject1", Description: "description1", CurSize: 1, MaxSize: 10, RoomNumber: 123, BlockOpen: true},
+  {Subject: "subject2", Description: "description2", CurSize: 0, MaxSize: 10, RoomNumber: 123, BlockOpen: true}
 ]

@@ -1,2 +1,4 @@
 main/js/firebase-messaging-sw.js
 .vscode/
+.DS_Store
+._.DS_Store

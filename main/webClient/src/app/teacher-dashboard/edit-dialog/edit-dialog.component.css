@@ -1,0 +1,11 @@
+.inputContainer {
+    display: flex;
+    flex-direction: column;
+    overflow: visible;
+    justify-content: space-evenly;
+    align-content: space-around;
+}
+
+.rowContainer {
+    flex-direction: row;
+}

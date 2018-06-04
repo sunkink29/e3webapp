@@ -7,6 +7,7 @@ import { AppComponent } from './app.component';
 import { AppRoutingModule } from './/app-routing.module';
 import { MaterialImportModule } from './/material-import.module';
 import { TeacherService } from './teacher.service'
+import { StudentService } from './student.service';
 
 @NgModule({
   declarations: [
@@ -19,7 +20,7 @@ import { TeacherService } from './teacher.service'
     HttpClientModule,
     MaterialImportModule,
   ],
-  providers: [TeacherService],
+  providers: [TeacherService, StudentService],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

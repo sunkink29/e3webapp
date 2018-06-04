@@ -7,8 +7,12 @@ const routes: Routes = [
     loadChildren: 'app/student-dashboard/student-dashboard.module#StudentDashboardModule'
   },
   {
+    path: 'teacher', 
+    loadChildren: 'app/teacher-dashboard/teacher-dashboard.module#TeacherDashboardModule'
+  },
+  {
     path: '',
-    redirectTo: 'student',
+    redirectTo: 'teacher',
     pathMatch: 'full'
   }
 ];

@@ -1,0 +1,42 @@
+.table-container {
+    float:left; 
+    display:inline; 
+    width: 46%;
+    margin: 2rem 1%;
+    padding: 0rem 1% 1rem;
+}
+
+.mat-table {
+    overflow: auto;
+    max-height: 50vh;
+}
+
+.table-header {
+    font-size: 1.3em;
+}
+
+.mat-header-row {
+    min-height: 0px;
+}
+
+.mat-column-button {
+    overflow: initial;
+    flex-direction: row-reverse;
+}
+
+.mat-column-button button {
+    float: right;
+}
+
+.table-button {
+    margin: 1rem 0rem 0rem;
+}
+
+.buttons-container {
+    display: flex;
+}
+
+.button-container {
+    flex: 1 1 100%;
+    text-align: center;
+}
